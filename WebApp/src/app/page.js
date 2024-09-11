@@ -7,7 +7,7 @@ const LandingPage = () => {
   const router = useRouter();
 
   const handleRedirect = () => {
-    router.push("/MainDashboard"); // Redirect to MainDashboard
+    router.push("/SysAdmin/MainDashboard"); // Redirect to MainDashboard
   };
 
   return (
