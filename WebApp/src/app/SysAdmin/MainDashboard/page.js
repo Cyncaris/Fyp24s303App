@@ -28,7 +28,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Manage Account Link */}
             <Link
-              href="/ManageAccountDashboard" // Path to the Manage Account page
+              href="/SysAdmin/ManageAccountDashboard" // Path to the Manage Account page
               className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">Manage Account</span>

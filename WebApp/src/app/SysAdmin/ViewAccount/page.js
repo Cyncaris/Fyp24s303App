@@ -33,7 +33,7 @@ const ViewAccount = () => {
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <Link href="/MainDashboard" className="hover:underline">Home</Link>
+                <Link href="/SysAdmin/MainDashboard" className="hover:underline">Home</Link>
               </li>
               <li>
                 <Link href="#" className="hover:underline">Logout</Link>

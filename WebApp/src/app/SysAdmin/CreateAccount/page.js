@@ -12,10 +12,10 @@ const CreateAccount = () => {
             <ul className="flex space-x-4">
               {/* Navigation Links */}
               <li>
-                <Link href="/MainDashboard" className="hover:underline">Home</Link> {/* Link to main dashboard */}
+                <Link href="/SysAdmin/MainDashboard" className="hover:underline">Home</Link> {/* Link to main dashboard */}
               </li>
               <li>
-                <Link href="/" className="hover:underline">Logout</Link> {/* Link to logout or home */}
+                <Link href="/app" className="hover:underline">Logout</Link> {/* Link to logout or home */}
               </li>
             </ul>
           </nav>

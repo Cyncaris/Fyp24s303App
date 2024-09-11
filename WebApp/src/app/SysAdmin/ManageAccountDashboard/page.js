@@ -35,7 +35,7 @@ const ManageAccountDashboard = () => {
             </a>
             {/* View Account Link */}
             <a
-              href="/ViewAccount"
+              href="/SysAdmin/ViewAccount"
               className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">View Account</span>
@@ -43,7 +43,7 @@ const ManageAccountDashboard = () => {
             </a>
             {/* Create Account Link */}
             <a
-              href="/CreateAccount" // Link to the Create Account page
+              href="/SysAdmin/CreateAccount" // Link to the Create Account page
               className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">Create Account</span>
