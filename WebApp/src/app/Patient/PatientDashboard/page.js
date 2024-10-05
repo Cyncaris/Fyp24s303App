@@ -46,7 +46,7 @@ const PatientDashboard = () => {
             </a>
             {/* Submit Feedback link */}
             <a
-              href="#" // Placeholder link, replace with actual URL if available
+              href="/Patient/SubmitFeedback" // Placeholder link, replace with actual URL if available
               className="bg-black text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">Submit Feedback</span>
