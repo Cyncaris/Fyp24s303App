@@ -46,10 +46,10 @@ export default function SubmitFeedback() {
                 </div>
             </header>
             <div className={styles.container}>
-                <h1 class='heading1'>Share your Feedback!</h1>
+                <h1 className='heading1'>Share your Feedback!</h1>
                 <form onSubmit={handleSubmit}>
                     <div>
-                        <label htmlFor="issueFaced">Issues Faced</label>
+                        <label className="fb_label" htmlFor="issueFaced">Issues Faced</label>
                         <input
                             type="text"
                             id="issueFaced"
@@ -59,7 +59,7 @@ export default function SubmitFeedback() {
                         />
                     </div>
                     <div>
-                        <label htmlFor="suggestion">Suggestion</label>
+                        <label className="fb_label" htmlFor="suggestion">Suggestion</label>
                         <textarea
                             id="suggestion"
                             value={suggestion}
