@@ -36,7 +36,10 @@ export default function SubmitFeedback() {
                     <nav>
                         <ul className="flex space-x-4">
                             <li>
-                                <a href="#" className="hover:underline">Home</a> {/* Link to home page */}
+                                <a href="/Patient/PatientDashboard">Back</a> {/* Link to back to previous page */}
+                            </li>
+                            <li>
+                                <a href="/Patient/PatientDashboard" className="hover:underline">Home</a> {/* Link to home page */}
                             </li>
                             <li>
                                 <a href="#" className="hover:underline">Logout</a> {/* Link to logout or similar action */}

@@ -12,7 +12,10 @@ const PatientPersonalRecordDashboard = () => {
           <nav>
             <ul className="flex space-x-4">
               <li>
-                <a href="#" className="hover:underline">Home</a> {/* Link to home page */}
+                <a href="/Patient/PatientDashboard">Back</a> {/* Link to back to previous page */}
+              </li>
+              <li>
+                <a href="/Patient/PatientDashboard" className="hover:underline">Home</a> {/* Link to home page */}
               </li>
               <li>
                 <a href="#" className="hover:underline">Logout</a> {/* Link to logout or similar action */}
@@ -38,7 +41,7 @@ const PatientPersonalRecordDashboard = () => {
 
             {/* Appointment History Link */}
             <a
-              href="#" 
+              href="#"
               className="bg-black text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">Appointment History</span>

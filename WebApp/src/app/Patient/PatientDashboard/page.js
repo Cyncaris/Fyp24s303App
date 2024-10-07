@@ -38,7 +38,7 @@ const PatientDashboard = () => {
 
             {/* View Appointment Link */}
             <a
-              href="#" 
+              href="/Patient/Appointment" // Placeholder link, replace with actual URL if available
               className="bg-black text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">View Appointment</span>
