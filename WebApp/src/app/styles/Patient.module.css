@@ -1,7 +1,4 @@
-.bg-black {
-    --tw-bg-opacity: 1;
-    background-color: rgb(00 00 00 / var(--tw-bg-opacity));
-}
+
 
 .heading1 h1 {
     text-align: center;
@@ -74,8 +71,6 @@
     font-size: large;
     font-weight: bold;
 }
-
-
 
 
 
