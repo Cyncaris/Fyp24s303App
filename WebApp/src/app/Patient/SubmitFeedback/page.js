@@ -48,27 +48,15 @@ export default function SubmitFeedback() {
                     </nav>
                 </div>
             </header>
-            <div className={styles.container}>
-                <h1 className='heading1'>Share your Feedback!</h1>
+            <div className="bg-white contianer mx-auto border-solid mt-10 border-2 rounded-sm">
+                <h1 className='text-2xl text-center font-bold'>Share your Feedback!</h1>
                 <form onSubmit={handleSubmit}>
                     <div>
-                        <label className="fb_label" htmlFor="issueFaced">Issues Faced</label>
-                        <input
-                            type="text"
-                            id="issueFaced"
-                            value={issueFaced}
-                            onChange={(e) => setIssueFaced(e.target.value)}
-                            required
-                        />
+                        <label className="" htmlFor="issueFaced">Issues Faced</label>
                     </div>
                     <div>
-                        <label className="fb_label" htmlFor="suggestion">Suggestion</label>
-                        <textarea
-                            id="suggestion"
-                            value={suggestion}
-                            onChange={(e) => setSuggestion(e.target.value)}
-                            required
-                        />
+                        <label className="" htmlFor="suggestion">Suggestion</label>
+                       
                     </div>
                     <button type="submit">Submit</button>
                 </form>
