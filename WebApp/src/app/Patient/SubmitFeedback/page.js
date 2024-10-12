@@ -48,17 +48,26 @@ export default function SubmitFeedback() {
                     </nav>
                 </div>
             </header>
-            <div className="bg-white contianer mx-auto border-solid mt-10 border-2 rounded-sm">
-                <h1 className='text-2xl text-center font-bold'>Share your Feedback!</h1>
+            <div className="bg-white contianer mx-auto px-4 border-solid mt-10 mb-5 border-2 rounded-sm">
+                <h1 className='mt-5 mb-2 text-2xl text-center font-bold'>Share your Feedback!</h1>
                 <form onSubmit={handleSubmit}>
                     <div>
                         <label className="" htmlFor="issueFaced">Issues Faced</label>
+                        <input
+                            className="bg-gray-100 h-12 w-full border border-gray-300 p-2 rounded-md text-base mb-2"
+                            type="text"
+                        />
                     </div>
                     <div>
                         <label className="" htmlFor="suggestion">Suggestion</label>
-                       
+                        <textarea
+                            className="bg-gray-100 h-40 w-full border border-gray-300 p-2 rounded-md text-base"
+                            rows="5"
+                        />  
                     </div>
-                    <button type="submit">Submit</button>
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-5">
+                        <button className="bg-black text-white p-4 rounded-lg shadow-md items-center justify-between hover:bg-blue-600 transition" type="submit">Submit</button>
+                    </div>
                 </form>
             </div>
 
