@@ -131,25 +131,27 @@ export default function Appointment() {
                         </div>
                     </div>
                 )}
-                <div className="container mx-auto px-4">
-                    <table className="table-auto border border-spacing-4">
-                        <tbody>
-                            <tr>
-                                <th>Appointment ID</th>
-                                <th>Title</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Location</th>
-                            </tr>
-                            <tr>
-                                <td>1</td>
-                                <td>Checkup</td>
-                                <td>2023-05-01</td>
-                                <td>10:00 AM</td>
-                                <td>Room 101</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div className="flex items-center justify-center mt-5 mb-5 container" >
+                    <div className="w-3/4 md:w-1/2 bg-white shadow-lg rounded-lg p-4">
+                        <table className="table-auto min-w-full border border-spacing-4">
+                            <tbody>
+                                <tr>
+                                    <th>Appointment ID</th>
+                                    <th>Title</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Location</th>
+                                </tr>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Checkup</td>
+                                    <td>2023-05-01</td>
+                                    <td>10:00 AM</td>
+                                    <td>Room 101</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </main>
