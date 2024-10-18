@@ -65,12 +65,12 @@ const ViewAccount = () => {
           {/* List of Users */}
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-800 mb-2">All Users</h3>
-            <div className="h-48 overflow-y-auto border border-gray-300 rounded-lg p-2">
+            <div className="h-48 overflow-y-auto border border-gray-800 rounded-lg p-2">
               <ul id="user-list">
                 {filteredUsers.map(user => (
                   <li
                     key={user.email}
-                    className="p-2 border-b border-gray-200 cursor-pointer hover:bg-gray-100 text-gray-800"
+                    className="p-2 border-b border-gray-800 cursor-pointer hover:bg-gray-100 text-gray-800"
                     onClick={() => handleUserClick(user)}
                   >
                     {user.name} - {user.email}
@@ -90,7 +90,7 @@ const ViewAccount = () => {
                   type="email"
                   id="email"
                   name="email"
-                  className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
+                  className="w-full p-2 border border-gray-800 rounded-lg text-gray-700"
                   value={selectedUser.email}
                   disabled
                 />

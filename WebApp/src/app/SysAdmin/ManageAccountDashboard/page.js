@@ -27,7 +27,7 @@ const ManageAccountDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* View Access Record Link */}
             <a
-              href="#"
+              href="/SysAdmin/AccessRecord"
               className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">View Access Record</span>
