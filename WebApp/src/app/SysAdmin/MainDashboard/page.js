@@ -1,4 +1,3 @@
-
 import React from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
 
