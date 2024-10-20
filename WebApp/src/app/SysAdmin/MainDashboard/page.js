@@ -1,3 +1,4 @@
+
 import React from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
 
@@ -37,7 +38,7 @@ const Dashboard = () => {
 
             {/* Manage Role Link */}
             <a
-              href="#" // Placeholder link, replace with actual URL if available
+              href="/SysAdmin/ManageRoleDashboard" // Placeholder link, replace with actual URL if available
               className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
             >
               <span className="font-bold text-lg">Manage Role</span>

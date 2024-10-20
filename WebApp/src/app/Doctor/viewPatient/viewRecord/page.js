@@ -5,12 +5,49 @@ import Link from 'next/link';
 
 export default function ViewRecord() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
-  // Example patient data
+  // Example patient data with records
   const patients = [
-    { id: 'P123', name: 'John Doe' },
-    { id: 'P456', name: 'Jane Smith' },
-    { id: 'P789', name: 'Emily Johnson' }
+    {
+      id: 'P123',
+      name: 'John Doe',
+      record: {
+        recordId: 1,
+        doctorId: 'D456',
+        visitDate: '01/09/2023',
+        diagnosis: 'Flu',
+        treatmentPlan: 'Rest and Hydration',
+        prescription: 'Paracetamol',
+        followUpDate: '08/09/2023',
+      },
+    },
+    {
+      id: 'P456',
+      name: 'Jane Smith',
+      record: {
+        recordId: 2,
+        doctorId: 'D456',
+        visitDate: '15/09/2023',
+        diagnosis: 'Back Pain',
+        treatmentPlan: 'Physical Therapy',
+        prescription: 'Ibuprofen',
+        followUpDate: '22/09/2023',
+      },
+    },
+    {
+      id: 'P789',
+      name: 'Emily Johnson',
+      record: {
+        recordId: 3,
+        doctorId: 'D456',
+        visitDate: '01/10/2023',
+        diagnosis: 'Allergy',
+        treatmentPlan: 'Antihistamines',
+        prescription: 'Cetirizine',
+        followUpDate: '07/10/2023',
+      },
+    },
   ];
 
   // Handle the change in the search input
@@ -19,9 +56,16 @@ export default function ViewRecord() {
   };
 
   // Filter patients based on search term
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) || patient.id.toString().includes(searchTerm)
+  const filteredPatients = patients.filter(
+    (patient) =>
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      patient.id.toString().includes(searchTerm)
   );
+
+  // Handle patient selection
+  const handlePatientClick = (patient) => {
+    setSelectedPatient(patient);
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
@@ -57,16 +101,20 @@ export default function ViewRecord() {
             onChange={handleSearchChange}
             className="border rounded-lg py-2 px-4 mb-4 w-full"
           />
-          
+
           <h2 className="text-lg font-bold mb-2">Patient List</h2>
           <div className="bg-white shadow-md rounded-lg p-4">
             {filteredPatients.length > 0 ? (
               <ul className="space-y-2">
                 {filteredPatients.map((patient) => (
-                  <li key={patient.id} className="border-b last:border-b-0 pb-2 mb-2">
-                    <Link href={`/patient/${patient.id}`} className="text-black hover:underline">
+                  <li
+                    key={patient.id}
+                    className="border-b last:border-b-0 pb-2 mb-2 cursor-pointer"
+                    onClick={() => handlePatientClick(patient)}
+                  >
+                    <span className="text-black hover:underline">
                       {patient.name} - {patient.id}
-                    </Link>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -74,6 +122,50 @@ export default function ViewRecord() {
               <p>No patients found.</p>
             )}
           </div>
+
+          {/* Patient Record Details */}
+          {selectedPatient && (
+            <div className="mt-8 bg-white shadow-md rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-4">Patient Record Details</h2>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Record ID:</label>
+                <p>{selectedPatient.record.recordId}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Patient ID:</label>
+                <p>{selectedPatient.id}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Doctor ID:</label>
+                <p>{selectedPatient.record.doctorId}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Visit Date:</label>
+                <p>{selectedPatient.record.visitDate}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Diagnosis:</label>
+                <p>{selectedPatient.record.diagnosis}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Treatment Plan:</label>
+                <p>{selectedPatient.record.treatmentPlan}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Prescription:</label>
+                <p>{selectedPatient.record.prescription}</p>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2">Follow-up Date:</label>
+                <p>{selectedPatient.record.followUpDate}</p>
+              </div>
+              
+              {/* Edit Record Button */}
+              <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full">
+                Edit Record
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
