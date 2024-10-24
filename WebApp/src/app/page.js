@@ -1,7 +1,7 @@
 'use client';  // Mark this component as a Client Component
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import Link from 'next/link'; // Import Link for navigation
 
 export default function HomePage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -69,6 +69,13 @@ export default function HomePage() {
           Refresh QR Code
         </button>
         {isExpired && <p className="text-red-500">Session has expired. Please request a new QR Code.</p>}
+        
+        {/* Make the entire text clickable */}
+        <div className="mt-4">
+          <Link href="/register" className="text-gray-700 hover:underline">
+            Don't have an account?
+          </Link>
+        </div>
       </div>
     </div>
   );
