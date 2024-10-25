@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link'; // Import Link for navigation
+import Image from 'next/image';
 
 export default function HomePage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -55,7 +56,7 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold mb-4">Scan to Login</h1>
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         {qrCodeUrl ? (
-          <img src={qrCodeUrl} alt="QR Code" className="mx-auto w-48 h-48" />
+          <Image src={qrCodeUrl} alt="QR Code" className="mx-auto w-48 h-48" />
         ) : (
           <p>Loading QR Code...</p>
         )}
@@ -73,7 +74,7 @@ export default function HomePage() {
         {/* Make the entire text clickable */}
         <div className="mt-4">
           <Link href="/register" className="text-gray-700 hover:underline">
-            Don't have an account?
+            Don`&apos;`t have an account?
           </Link>
         </div>
       </div>
