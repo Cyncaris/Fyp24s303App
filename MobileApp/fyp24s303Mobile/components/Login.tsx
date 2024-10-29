@@ -62,6 +62,7 @@ export default function Auth() {
 
             if (result.success) {
                 Alert.alert('Authentication successful!');
+                console.log("Login successful, navigating to QrScanner.");
                 // Proceed to the main app or dashboard screen
                 // navigation.navigate('Dashboard');
             } else {
