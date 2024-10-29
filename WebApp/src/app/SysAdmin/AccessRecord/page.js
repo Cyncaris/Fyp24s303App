@@ -1,24 +1,66 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link"; // Next.js Link for navigation
+import { supabase } from "@/app/lib/supabaseClient"; // Ensure the correct path for Supabase client
 
 const AccessRecord = () => {
-const [records] = useState([
-    { id: 1, userId: "P123", role: "Patient", time: "05:30", date: "2023-09-01", status: "Success", duration: "5m30s", device: "iOS" },
-    { id: 2, userId: "D456", role: "Doctor", time: "15:30", date: "2023-09-01", status: "Fail", duration: "10m55s", device: "Android" },
-]);
+    const [records, setRecords] = useState([]); // Store fetched records
+    const [searchTerm, setSearchTerm] = useState("");
+    const [error, setError] = useState("");
 
-const [searchTerm, setSearchTerm] = useState("");
+  // Fetch access records from Supabase
+useEffect(() => {
+    const fetchRecords = async () => {
+        try {
+        const { data, error } = await supabase
+          .from("useraccount") // Replace with your actual table name
+          .select("id, email, first_name, last_name, is_active, created_at");
+        if (error) {
+          throw error;
+        }
+        setRecords(data); // Set the records retrieved from Supabase
+        } catch (err) {
+        setError("Failed to fetch records: " + err.message);
+        }
+    };
+    fetchRecords();
+}, []);
 
+  // Handle search
 const handleSearch = (e) => {
     setSearchTerm(e.target.value);
 };
 
+  // Filter records based on search term
 const filteredRecords = records.filter(
     (record) =>
-    record.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.role.toLowerCase().includes(searchTerm.toLowerCase())
+    record.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.email.toLowerCase().includes(searchTerm.toLowerCase())
 );
+
+  // Handle suspend account
+const handleSuspend = async (userId) => {
+    try {
+    const { error } = await supabase
+        .from("useraccount") // Assuming this is your users table
+        .update({ is_active: false }) // Update the user's active status
+        .eq("id", userId); // Use the 'id' to identify the user to update
+
+    if (error) {
+        throw error;
+    }
+
+    // Update local state to immediately reflect the change
+    const updatedRecords = records.map((record) =>
+        record.id === userId ? { ...record, is_active: false } : record
+    );
+    setRecords(updatedRecords); // Set the updated records
+
+    } catch (err) {
+        setError("Failed to suspend account: " + err.message);
+    }
+};
 
 return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
@@ -53,7 +95,7 @@ return (
         <input
             type="text"
             className="w-full p-2 border border-gray-800 rounded-lg"
-            placeholder="Search by name or email"
+            placeholder="Search by first name, last name, or email"
             value={searchTerm}
             onChange={handleSearch}
         />
@@ -64,30 +106,47 @@ return (
         <thead className="border border-black">
             <tr className="bg-white text-gray-800">
             <th className="px-4 py-2">Record ID</th>
-            <th className="px-4 py-2">User ID</th>
-            <th className="px-4 py-2">Role</th>
-            <th className="px-4 py-2">Time</th>
-            <th className="px-4 py-2">Date</th>
-            <th className="px-4 py-2">Login Status</th>
-            <th className="px-4 py-2">Session Duration</th>
-            <th className="px-4 py-2">Device Type</th>
+            <th className="px-4 py-2">First Name</th>
+            <th className="px-4 py-2">Last Name</th>
+            <th className="px-4 py-2">Email</th>
+            <th className="px-4 py-2">Active</th>
+            <th className="px-4 py-2">Created At</th>
+            <th className="px-4 py-2">Actions</th> {/* Add Actions column */}
             </tr>
         </thead>
         <tbody>
-            {filteredRecords.map((record) => (
-            <tr key={record.id} className="hover:bg-gray-700 text-gray-900">
+            {filteredRecords.length > 0 ? (
+            filteredRecords.map((record) => (
+                <tr key={record.id} className="hover:bg-gray-700 text-gray-900">
                 <td className="border border-gray-900 px-4 py-2">{record.id}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.userId}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.role}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.time}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.date}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.status}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.duration}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.device}</td>
+                <td className="border border-gray-900 px-4 py-2">{record.first_name}</td>
+                <td className="border border-gray-900 px-4 py-2">{record.last_name}</td>
+                <td className="border border-gray-900 px-4 py-2">{record.email}</td>
+                <td className="border border-gray-900 px-4 py-2">{record.is_active ? "Yes" : "No"}</td>
+                <td className="border border-gray-900 px-4 py-2">{record.created_at}</td>
+                <td className="border border-gray-900 px-4 py-2">
+                    {/* Suspend Account Button */}
+                    {record.is_active && (
+                    <button
+                        className="bg-red-500 text-white px-4 py-2 rounded"
+                        onClick={() => handleSuspend(record.id)}
+                    >
+                        Suspend Account
+                    </button>
+                    )}
+                </td>
+                </tr>
+            ))
+            ) : (
+            <tr>
+                <td colSpan="7" className="text-center text-gray-500 py-4">
+                No records found.
+                </td>
             </tr>
-            ))}
+            )}
         </tbody>
         </table>
+        {error && <p className="text-red-500 mt-4">{error}</p>}
     </main>
 
       {/* Footer Section */}
