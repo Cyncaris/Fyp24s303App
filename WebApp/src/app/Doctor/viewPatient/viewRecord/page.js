@@ -1,56 +1,54 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../../lib/supabaseClient';
 
 export default function ViewRecord() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [patients, setPatients] = useState([]);
-  const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({});
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      const { data, error } = await supabase
-        .from('patientrecord')
-        .select(`
-          record_id,
-          patient_id,
-          diagnosis,
-          doctor_id,
-          visit_date,
-          treatment_plan,
-          prescription,
-          follow_up_date,
-          useraccount:patient_id ( first_name, last_name )
-        `);
-
-      if (error) {
-        console.error('Error fetching patients:', error);
-      } else {
-        console.log(data); 
-        const formattedPatients = data.map((patient) => ({
-          id: patient.patient_id,
-          name: `${patient.useraccount.first_name} ${patient.useraccount.last_name}`,
-          record: {
-            recordId: patient.record_id,
-            doctorId: patient.doctor_id,
-            visitDate: patient.visit_date,
-            diagnosis: patient.diagnosis,
-            treatmentPlan: patient.treatment_plan,
-            prescription: patient.prescription,
-            followUpDate: patient.follow_up_date,
-          },
-        }));
-
-        setPatients(formattedPatients);
-      }
-    };
-
-    fetchPatients();
-  }, []);
+  // Example patient data with records
+  const patients = [
+    {
+      id: 'P123',
+      name: 'John Doe',
+      record: {
+        recordId: 1,
+        doctorId: 'D456',
+        visitDate: '01/09/2023',
+        diagnosis: 'Flu',
+        treatmentPlan: 'Rest and Hydration',
+        prescription: 'Paracetamol',
+        followUpDate: '08/09/2023',
+      },
+    },
+    {
+      id: 'P456',
+      name: 'Jane Smith',
+      record: {
+        recordId: 2,
+        doctorId: 'D456',
+        visitDate: '15/09/2023',
+        diagnosis: 'Back Pain',
+        treatmentPlan: 'Physical Therapy',
+        prescription: 'Ibuprofen',
+        followUpDate: '22/09/2023',
+      },
+    },
+    {
+      id: 'P789',
+      name: 'Emily Johnson',
+      record: {
+        recordId: 3,
+        doctorId: 'D456',
+        visitDate: '01/10/2023',
+        diagnosis: 'Allergy',
+        treatmentPlan: 'Antihistamines',
+        prescription: 'Cetirizine',
+        followUpDate: '07/10/2023',
+      },
+    },
+  ];
 
   // Handle the change in the search input
   const handleSearchChange = (event) => {
@@ -67,55 +65,7 @@ export default function ViewRecord() {
   // Handle patient selection
   const handlePatientClick = (patient) => {
     setSelectedPatient(patient);
-    setFormData({
-      visitDate: patient.record.visitDate,
-      diagnosis: patient.record.diagnosis,
-      treatmentPlan: patient.record.treatmentPlan,
-      prescription: patient.record.prescription,
-      followUpDate: patient.record.followUpDate,
-    });
-    setEditMode(false); 
   };
-
-  // Handle form input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  // Handle edit record submission
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-
-    const { data, error } = await supabase
-      .from('patientrecord')
-      .update({
-        visit_date: formData.visitDate,
-        diagnosis: formData.diagnosis,
-        treatment_plan: formData.treatmentPlan,
-        prescription: formData.prescription,
-        follow_up_date: formData.followUpDate,
-        last_update_at: new Date().toISOString(), 
-      })
-      .eq('patient_id', selectedPatient.id); 
-
-    if (error) {
-      console.error('Error updating record:', error);
-    } else {
-      setSelectedPatient({
-        ...selectedPatient,
-        record: {
-          ...selectedPatient.record,
-          ...formData,
-        },
-      });
-      setEditMode(false); 
-    }
-  };
-
 
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
@@ -174,7 +124,7 @@ export default function ViewRecord() {
           </div>
 
           {/* Patient Record Details */}
-          {selectedPatient && !editMode && (
+          {selectedPatient && (
             <div className="mt-8 bg-white shadow-md rounded-lg p-6">
               <h2 className="text-lg font-bold mb-4">Patient Record Details</h2>
               <div className="mb-4">
@@ -211,95 +161,19 @@ export default function ViewRecord() {
               </div>
               
               {/* Edit Record Button */}
-              <button
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full"
-                onClick={() => setEditMode(true)}
-              >
+              <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full">
                 Edit Record
               </button>
             </div>
-          )}
-
-          {/* Edit Patient Record Form */}
-          {selectedPatient && editMode && (
-            <form onSubmit={handleEditSubmit} className="mt-8 bg-white shadow-md rounded-lg p-6">
-              <h2 className="text-lg font-bold mb-4">Edit Patient Record</h2>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Visit Date:</label>
-                <input
-                  type="date"
-                  name="visitDate"
-                  value={formData.visitDate}
-                  onChange={handleInputChange}
-                  className="border rounded-lg py-2 px-4 w-full"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Diagnosis:</label>
-                <input
-                  type="text"
-                  name="diagnosis"
-                  value={formData.diagnosis}
-                  onChange={handleInputChange}
-                  className="border rounded-lg py-2 px-4 w-full"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Treatment Plan:</label>
-                <input
-                  type="text"
-                  name="treatmentPlan"
-                  value={formData.treatmentPlan}
-                  onChange={handleInputChange}
-                  className="border rounded-lg py-2 px-4 w-full"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Prescription:</label>
-                <input
-                  type="text"
-                  name="prescription"
-                  value={formData.prescription}
-                  onChange={handleInputChange}
-                  className="border rounded-lg py-2 px-4 w-full"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Follow-up Date:</label>
-                <input
-                  type="date"
-                  name="followUpDate"
-                  value={formData.followUpDate}
-                  onChange={handleInputChange}
-                  className="border rounded-lg py-2 px-4 w-full"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-600"
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditMode(false)}
-                className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-600 ml-2"
-              >
-                Cancel
-              </button>
-            </form>
           )}
         </div>
       </main>
 
       {/* Footer Section */}
-      <footer className="bg-gray-200 py-4 text-center">
-        <p className="text-gray-600">© 2024 Your Hospital. All Rights Reserved.</p>
+      <footer className="bg-gray-800 text-white py-4">
+        <div className="container mx-auto px-4 text-center">
+          &copy; 2023 Hospital App. All rights reserved.
+        </div>
       </footer>
     </div>
   );

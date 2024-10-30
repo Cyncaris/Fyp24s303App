@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
-import { supabase } from "@/app/lib/supabaseClient"; // Import Supabase client
 import styles from "../../styles/Patient.module.css"; // Import CSS Modules stylesheet as styles
 
 import { useState } from 'react';
@@ -11,41 +10,21 @@ export default function SubmitFeedback() {
     // Define state for form fields
     const [suggestion, setSuggestion] = useState('');
     const [issueFaced, setIssueFaced] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
 
     // Handle form submission
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault(); // Prevent page reload
-        setLoading(true);
-        setErrorMessage('');
-        setSuccessMessage('');
 
-        try {
-            const { data, error } = await supabase
-                .from('feedback')
-                .insert([
-                    {
-                        issues_faced: issueFaced,
-                        suggestion: suggestion,
-                        patient_id: 'your_patient_id' // Replace with actual patient_id, perhaps from user session
-                    }
-                ]);
+        // Log form data (you can send it to an API instead)
+        console.log({
+            suggestion,
+            issueFaced,
+        });
 
-            if (error) {
-                setErrorMessage('Failed to submit feedback: ' + error.message);
-            } else {
-                setSuccessMessage('Feedback submitted successfully!');
-                // Clear the form
-                setSuggestion('');
-                setIssueFaced('');
-            }
-        } catch (err) {
-            setErrorMessage('An unexpected error occurred: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
+        // Clear the form
+        setSuggestion('');
+        setIssueFaced('');
+        alert('Feedback submitted successfully!');
     };
 
     return (
@@ -57,20 +36,20 @@ export default function SubmitFeedback() {
                     <nav>
                         <ul className="flex space-x-4">
                             <li>
-                                <a href="/Patient/PatientDashboard">Back</a>
+                                <a href="/Patient/PatientDashboard">Back</a> {/* Link to back to previous page */}
                             </li>
                             <li>
-                                <a href="/Patient/PatientDashboard" className="hover:underline">Home</a>
+                                <a href="/Patient/PatientDashboard" className="hover:underline">Home</a> {/* Link to home page */}
                             </li>
                             <li>
-                                <a href="#" className="hover:underline">Logout</a>
+                                <a href="#" className="hover:underline">Logout</a> {/* Link to logout or similar action */}
                             </li>
                         </ul>
                     </nav>
                 </div>
             </header>
             <div className="flex items-center justify-center mt-5 mb-5">
-                <div className="bg-white container px-4 border-solid border-2 rounded-sm">
+                <div className="bg-white contianer px-4 border-solid border-2 rounded-sm">
                     <h1 className='mt-5 mb-2 text-2xl text-center font-bold'>Share your Feedback!</h1>
                     <form onSubmit={handleSubmit}>
                         <div>
@@ -93,20 +72,12 @@ export default function SubmitFeedback() {
                                 value={suggestion}
                                 onChange={(e) => setSuggestion(e.target.value)}
                                 required
-                            />
+                            />  
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-5">
-                            <button
-                                className="bg-black text-white p-4 rounded-lg shadow-md items-center justify-between hover:bg-blue-600 transition"
-                                type="submit"
-                                disabled={loading}
-                            >
-                                {loading ? 'Submitting...' : 'Submit'}
-                            </button>
+                            <button className="bg-black text-white p-4 rounded-lg shadow-md items-center justify-between hover:bg-blue-600 transition" type="submit">Submit</button>
                         </div>
                     </form>
-                    {errorMessage && <p className="text-red-500 text-center mt-2">{errorMessage}</p>}
-                    {successMessage && <p className="text-green-500 text-center mt-2">{successMessage}</p>}
                 </div>
             </div>
 

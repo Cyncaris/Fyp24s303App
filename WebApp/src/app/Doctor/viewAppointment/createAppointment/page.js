@@ -1,62 +1,14 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../../lib/supabaseClient';
 
 export default function CreateAppointment() {
-  const [formData, setFormData] = useState({
-    doctor_id: '',
-    patient_id: '',
-    title: '',
-    date: '',
-    time: '',
-    location: '', // Added location
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    const { error } = await supabase
-      .from('appointments')
-      .insert([
-        {
-          doctor_id: formData.doctor_id,
-          patient_id: formData.patient_id,
-          title: formData.title,
-          date: formData.date,
-          time: formData.time,
-          location: formData.location, // Include location in the insert
-        },
-      ]);
-
-    if (error) {
-      console.error('Error creating appointment:', error);
-    } else {
-      // Optionally reset the form or redirect after successful creation
-      setFormData({
-        doctor_id: '',
-        patient_id: '',
-        title: '',
-        date: '',
-        time: '',
-        location: '', // Reset location
-      });
-      alert('Appointment created successfully!');
-    }
-  };
-
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-green-600 text-white py-4 shadow-lg">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Create Appointment</h1>
+          <h1 className="text-2xl font-bold">Create Patient Records</h1>
           <nav>
             <ul className="flex space-x-4">
               {/* Navigation Links */}
@@ -78,16 +30,14 @@ export default function CreateAppointment() {
       <main className="flex-grow container mx-auto px-4 py-8">
         <div className="bg-white shadow-md rounded-lg p-6 max-w-lg mx-auto">
           <h2 className="text-xl font-bold text-gray-800 mb-6">Appointment Details</h2>
-          <form onSubmit={handleSubmit}>
+          <form>
             {/* Doctor ID Input */}
             <div className="mb-4">
               <label htmlFor="doctorID" className="block text-gray-700 font-bold mb-2">Doctor ID</label>
               <input
                 type="text"
                 id="doctorID"
-                name="doctor_id"
-                value={formData.doctor_id}
-                onChange={handleInputChange}
+                name="doctorID"
                 className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
                 required
               />
@@ -98,35 +48,40 @@ export default function CreateAppointment() {
               <input
                 type="text"
                 id="patientID"
-                name="patient_id"
-                value={formData.patient_id}
-                onChange={handleInputChange}
+                name="patientID"
                 className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
                 required
               />
             </div>
-            {/* Title Input */}
+            {/* First Name Input */}
             <div className="mb-4">
-              <label htmlFor="title" className="block text-gray-700 font-bold mb-2">Title</label>
+              <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
               <input
                 type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
+                id="firstName"
+                name="firstName"
                 className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
                 required
               />
             </div>
+            {/* Last Name Input */}
+            <div className="mb-4">
+              <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
+                required
+              />
+            </div>            
             {/* Visit Date Input */}
             <div className="mb-4">
               <label htmlFor="visitDate" className="block text-gray-700 font-bold mb-2">Visit Date</label>
               <input
-                type="date"
+                type="text"
                 id="visitDate"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
+                name="visitDate"
                 className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
                 required
               />
@@ -135,24 +90,9 @@ export default function CreateAppointment() {
             <div className="mb-4">
               <label htmlFor="visitTime" className="block text-gray-700 font-bold mb-2">Visit Time</label>
               <input
-                type="time"
-                id="visitTime"
-                name="time"
-                value={formData.time}
-                onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
-                required
-              />
-            </div>
-            {/* Location Input */}
-            <div className="mb-4">
-              <label htmlFor="location" className="block text-gray-700 font-bold mb-2">Location</label>
-              <input
                 type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
+                id="visitTime"
+                name="visitTime"
                 className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
                 required
               />

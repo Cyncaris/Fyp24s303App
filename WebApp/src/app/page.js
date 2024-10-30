@@ -56,13 +56,7 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold mb-4">Scan to Login</h1>
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         {qrCodeUrl ? (
-          <Image
-            src={qrCodeUrl}
-            alt="QR Code"
-            width={192}   // Specify width in pixels (48 * 4)
-            height={192}  // Specify height in pixels (48 * 4)
-            className="mx-auto"
-          />
+          <Image src={qrCodeUrl} alt="QR Code" className="mx-auto w-48 h-48" />
         ) : (
           <p>Loading QR Code...</p>
         )}
@@ -80,7 +74,7 @@ export default function HomePage() {
         {/* Make the entire text clickable */}
         <div className="mt-4">
           <Link href="/register" className="text-gray-700 hover:underline">
-            Don&apos;t have an account?
+            Don`&apos;`t have an account?
           </Link>
         </div>
       </div>

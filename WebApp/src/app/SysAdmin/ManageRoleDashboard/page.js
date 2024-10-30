@@ -1,217 +1,86 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link"; // Next.js Link for navigation
-import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path to your Supabase client
 
 const ManageRoleDashboard = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState([]); // For storing fetched users
-  const [selectedUser, setSelectedUser] = useState(null); // To track the selected user for editing
-  const [newRole, setNewRole] = useState(""); // To store the updated role
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+const [users] = useState([
+    { name: "John Doe", role: "Admin" },
+    { name: "Jane Smith", role: "Doctor" },
+    { name: "Emily Johnson", role: "Patient" },
+]);
 
-  // Role mapping function
-  const mapRoleIdToRole = (role_id) => {
-    switch (role_id) {
-      case 1:
-        return "Doctor";
-      case 2:
-        return "Patient";
-      case 3:
-        return "SysAdmin";
-      default:
-        return "Unknown";
-    }
-  };
-
-  // Reverse role mapping for updates (convert role names back to ID)
-  const mapRoleToRoleId = (role) => {
-    switch (role.toLowerCase()) {
-      case "doctor":
-        return 1;
-      case "patient":
-        return 2;
-      case "sysadmin":
-        return 3;
-      default:
-        return null;
-    }
-  };
-
-  // Fetch users from Supabase on component mount
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("useraccount") // Replace with your actual table name
-          .select("id, first_name, last_name, role_id"); // Adjust fields based on your table structure
-
-        if (error) {
-          throw error;
-        }
-
-        // Map role_id to human-readable roles
-        const usersWithRoles = data.map((user) => ({
-          ...user,
-          role: mapRoleIdToRole(user.role_id),
-        }));
-
-        setUsers(usersWithRoles); // Set the users data fetched from Supabase
-      } catch (err) {
-        setError("Failed to fetch users: " + err.message);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
-  // Filter users based on search term
-  const filteredUsers = users.filter(
+const filteredUsers = users.filter(
     (user) =>
-      (user.first_name && user.first_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.last_name && user.last_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
-  // Handle user selection for role editing
-  const handleUserClick = (user) => {
-    setSelectedUser(user);
-    setNewRole(user.role); // Set the current role to the dropdown
-    setSuccessMessage(""); // Clear previous success messages
-  };
-
-  // Handle role update in Supabase
-  const handleRoleUpdate = async () => {
-    const updatedRoleId = mapRoleToRoleId(newRole); // Convert role name back to role_id
-
-    if (updatedRoleId === null) {
-      setError("Invalid role. Please select a valid role from the dropdown.");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("useraccount") // Replace with your actual table name
-        .update({ role_id: updatedRoleId }) // Update the role_id field
-        .eq("id", selectedUser.id); // Identify the user to update by their id
-
-      if (error) {
-        throw error;
-      }
-
-      // Update the local users state to reflect the changes immediately
-      const updatedUsers = users.map((user) =>
-        user.id === selectedUser.id ? { ...user, role: newRole } : user
-      );
-      setUsers(updatedUsers);
-
-      setSuccessMessage("Role updated successfully!");
-      setTimeout(() => {
-        setSuccessMessage(""); // Clear success message after 3 seconds
-      }, 3000);
-
-      setSelectedUser(null); // Close the edit form after successful update
-    } catch (err) {
-      setError("Failed to update role: " + err.message);
-    }
-  };
-
-  return (
+return (
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
-      <header className="bg-blue-600 text-white py-4 shadow-lg">
+    <header className="bg-blue-600 text-white py-4 shadow-lg">
         <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Edit Account</h1>
-          <nav>
+        <h1 className="text-2xl font-bold">Edit Account</h1>
+        <nav>
             <ul className="flex space-x-4">
-              <li>
+            <li>
                 <Link href="/SysAdmin/MainDashboard" className="hover:underline">
-                  Back
+                Back
                 </Link>
-              </li>
-              <li>
+            </li>
+            <li>
                 <Link href="/app" className="hover:underline">
-                  Home
+                Home
                 </Link>
-              </li>
-              <li>
+            </li>
+            <li>
                 <a href="#" className="hover:underline">
-                  Logout
+                Logout
                 </a>
-              </li>
+            </li>
             </ul>
-          </nav>
+        </nav>
         </div>
-      </header>
+    </header>
 
       {/* Main Content Section */}
-      <main className="flex-grow container mx-auto px-4 py-8">
+    <main className="flex-grow container mx-auto px-4 py-8">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Role Management</h2>
 
         {/* Search Box */}
         <div className="mb-4">
-          <input
+        <input
             type="text"
             className="w-full p-2 border border-gray-800 rounded-lg"
-            placeholder="Search by name or role"
+            placeholder="Search by name or ID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        />
         </div>
 
         {/* User List */}
         <h3 className="text-lg font-semibold text-gray-800 mb-4">All Users</h3>
         <ul className="border border-gray-600 rounded-lg divide-y divide-gray-600 bg-white text-gray-800">
-          {filteredUsers.map((user) => (
+        {filteredUsers.map((user, index) => (
             <li
-              key={user.id}
-              className="p-4 hover:bg-gray-300 border border-gray-600 cursor-pointer"
-              onClick={() => handleUserClick(user)}
+            key={index}
+            className="p-4 hover:bg-gray-300 border border-gray-600"
             >
-              {user.first_name} {user.last_name} - Role: {user.role}
+            {user.name} - {user.role}
             </li>
-          ))}
+        ))}
         </ul>
-
-        {/* Role Editing Form */}
-        {selectedUser && (
-          <div className="mt-6 bg-white p-6 shadow-md rounded-lg">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Edit Role for {selectedUser.first_name} {selectedUser.last_name}</h3>
-            <div className="mb-4">
-              <label htmlFor="role" className="block text-gray-700 font-bold mb-2">New Role</label>
-              <select
-                id="role"
-                name="role"
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value)}
-              >
-                <option value="Doctor">Doctor</option>
-                <option value="Patient">Patient</option>
-                <option value="SysAdmin">SysAdmin</option>
-              </select>
-            </div>
-            <button
-              onClick={handleRoleUpdate}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
-            >
-              Update Role
-            </button>
-            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
-            {error && <p className="text-red-500 mt-4">{error}</p>}
-          </div>
-        )}
-      </main>
+    </main>
 
       {/* Footer Section */}
-      <footer className="bg-gray-800 text-white py-4">
+    <footer className="bg-gray-800 text-white py-4">
         <div className="container mx-auto px-4 text-center">
-          &copy; 2023 Role Management Dashboard. All rights reserved.
+        &copy; 2023 Role Management Dashboard. All rights reserved.
         </div>
-      </footer>
+    </footer>
     </div>
-  );
+);
 };
 
 export default ManageRoleDashboard;
