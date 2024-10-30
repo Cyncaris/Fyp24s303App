@@ -1,72 +1,76 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
-import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+    View, Text, StyleSheet, SafeAreaView, Pressable, Linking,
+    Platform,
+    StatusBar,
+} from "react-native";
+import { Link, Stack } from "expo-router";
 import { Session } from '@supabase/supabase-js';
+import { useRef } from 'react';
 
-export default function QrScanner({session}: {session: Session}) {
+export default function QrScanner({ session }: { session: Session }) {
     console.log('QrScanner');
-    const [facing, setFacing] = useState<CameraType>('back');
+    const qrLock = useRef(false);
     const [permission, requestPermission] = useCameraPermissions();
 
-    if (!permission) {
-        // Camera permissions are still loading.
-        return <View />;
-    }
-
-    if (!permission.granted) {
-        // Camera permissions are not granted yet.
-        return (
-            <View style={styles.container}>
-                <Text style={styles.message}>We need your permission to show the camera</Text>
-                <Button onPress={requestPermission} title="grant permission" />
-            </View>
-        );
-    }
-
-    function toggleCameraFacing() {
-        setFacing(current => (current === 'back' ? 'front' : 'back'));
-    }
+    const isPermissionGranted = Boolean(permission?.granted);
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.message}>Scan the QR code</Text>
-            <CameraView style={styles.camera} facing={facing}>
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-                        <Text style={styles.text}>Flip Camera</Text>
-                    </TouchableOpacity>
-                </View>
-            </CameraView>
-        </View>
+        <SafeAreaView style={styles.container}>
+            <Stack.Screen options={{ title: "Overview", headerShown: false }} />
+            <Text style={styles.title}>QR Code Scanner</Text>
+            <View style={{ gap: 20 }}>
+                <Pressable onPress={requestPermission}>
+                    <Text style={styles.buttonStyle}>Request Permissions</Text>
+                </Pressable>
+                <SafeAreaView style={StyleSheet.absoluteFillObject}>
+                    <Stack.Screen
+                        options={{
+                            title: "Overview",
+                            headerShown: false,
+                        }}
+                    />
+                    {Platform.OS === "android" ? <StatusBar hidden /> : null}
+                    <CameraView
+                        style={StyleSheet.absoluteFillObject}
+                        facing="back"
+                        onBarcodeScanned={({ data }) => {
+                           console.log('onBarcodeScanned');
+                           console.log(data);
+                        }}
+                    />
+                </SafeAreaView>
+                <Pressable disabled={!isPermissionGranted}>
+                    <Text
+                        style={[
+                            styles.buttonStyle,
+                            { opacity: !isPermissionGranted ? 1 : 1 },
+                        ]}
+                    >
+                        Scan Code
+                    </Text>
+                </Pressable>
+
+            </View>
+        </SafeAreaView >
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        alignItems: "center",
+        backgroundColor: "black",
+        justifyContent: "space-around",
+        paddingVertical: 80,
     },
-    message: {
-        textAlign: 'center',
-        paddingBottom: 10,
+    title: {
+        color: "white",
+        fontSize: 40,
     },
-    camera: {
-        flex: 1,
-    },
-    buttonContainer: {
-        flex: 1,
-        flexDirection: 'row',
-        backgroundColor: 'transparent',
-        margin: 64,
-    },
-    button: {
-        flex: 1,
-        alignSelf: 'flex-end',
-        alignItems: 'center',
-    },
-    text: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'white',
+    buttonStyle: {
+        color: "#0E7AFE",
+        fontSize: 20,
+        textAlign: "center",
     },
 });
