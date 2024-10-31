@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link'; // Import Link for navigation
 import Image from 'next/image';
+import {QRCodeSVG} from 'qrcode.react';
 
 export default function HomePage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [qr_data, setQrData] = useState(null)
   const [sessionId, setSessionId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isExpired, setIsExpired] = useState(false); // State to manage expiration status
@@ -23,11 +25,10 @@ export default function HomePage() {
       }
 
       const data = await response.json();
-      if (!data.qrCodeDataUrl) {
+      if (!data.channel_data_hash) {
         throw new Error('No QR Code found in the response');
       }
-
-      setQrCodeUrl(data.qrCodeDataUrl);
+      setQrCodeUrl(data.channel_data_hash);
       setSessionId(data.sessionId);
       setIsExpired(false); // Reset expiration status on successful fetch
     } catch (error) {
@@ -39,7 +40,6 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchQrCode(); // Initial fetch for QR code
-
     // Set a timeout to change isExpired after the JWT expires
     const expirationTimeout = setTimeout(() => {
       setIsExpired(true); // Set expiration status after the token's lifespan (e.g., 10 minutes)
@@ -56,13 +56,7 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold mb-4">Scan to Login</h1>
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         {qrCodeUrl ? (
-          <Image
-            src={qrCodeUrl}
-            alt="QR Code"
-            width={192}   // Specify width in pixels (48 * 4)
-            height={192}  // Specify height in pixels (48 * 4)
-            className="mx-auto"
-          />
+          <QRCodeSVG value={qrCodeUrl} size={192} />
         ) : (
           <p>Loading QR Code...</p>
         )}
