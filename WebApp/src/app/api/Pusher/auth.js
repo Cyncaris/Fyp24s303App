@@ -1,5 +1,3 @@
-// pages/api/pusher/auth.js
-
 import Pusher from 'pusher';
 
 const pusher = new Pusher({
@@ -10,26 +8,19 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    const { socket_id, channel_name } = req.body;
-    try {
-      // Authenticate the request
-      const authResponse = pusher.authenticate(socket_id, channel_name);
-      res.status(200).send(authResponse);
-      
-      // **Log the event data and trigger the test event**
-      const eventData = { message: 'Test message from server' };
-      console.log('Sending event data:', eventData);
+export async function POST(req) {
+  console.log("API reached successfully");
+  try {
+    const { socket_id, channel_name } = await req.json();
 
-      pusher.trigger(channel_name, 'login-event', eventData);
-      console.log('Test event triggered on channel:', channel_name);
-
-    } catch (error) {
-      console.error('Error authenticating Pusher:', error);
-      res.status(500).send({ error: 'Pusher authentication failed' });
+    if (!socket_id || !channel_name) {
+      return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
     }
-  } else {
-    res.status(405).send({ error: 'Method Not Allowed' });
+
+    const auth = pusher.authorizeChannel(socket_id, channel_name);
+    return new Response(JSON.stringify(auth), { status: 200 });
+  } catch (error) {
+    console.error('Error authenticating Pusher:', error);
+    return new Response(JSON.stringify({ error: 'Pusher authentication failed' }), { status: 500 });
   }
 }
