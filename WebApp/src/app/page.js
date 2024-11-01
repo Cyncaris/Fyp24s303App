@@ -1,9 +1,17 @@
 'use client';  // Mark this component as a Client Component
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link'; // Import Link for navigation
 import Image from 'next/image';
 import {QRCodeSVG} from 'qrcode.react';
+import Pusher from 'pusher-js';
+
+// Initialize Pusher
+const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+  encrypted: true,
+});
+
 
 export default function HomePage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -11,6 +19,7 @@ export default function HomePage() {
   const [sessionId, setSessionId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isExpired, setIsExpired] = useState(false); // State to manage expiration status
+  const hasFetched = useRef(false); // Add ref to track initial fetch
 
   const fetchQrCode = async () => {
     try {
@@ -31,6 +40,8 @@ export default function HomePage() {
       setQrCodeUrl(data.channel_data_hash);
       setSessionId(data.sessionId);
       setIsExpired(false); // Reset expiration status on successful fetch
+      hasFetched.current = true; // Set ref to true after initial fetch
+      console.log('QR Code URL:', data.channel_data_hash);
     } catch (error) {
       console.error('Error fetching QR code:', error);
       setErrorMessage(error.message);
@@ -38,13 +49,28 @@ export default function HomePage() {
     }
   };
 
+  const msgChannel = () => {
+    const pusherChannel = pusher.subscribe('my-channel');
+    console.log('Subscribed to pusher channel');
+    pusherChannel.bind('login-event', function (data) {
+      console.log('Received event data:', data);
+      setQrData(data);
+    });
+  
+    pusherChannel.bind('pusher:subscription_error', function (status) {
+      console.error('Error subscribing to channel:', status);
+    });
+  }
+
   useEffect(() => {
     fetchQrCode(); // Initial fetch for QR code
+    msgChannel(); // Subscribe to Pusher channel
+
     // Set a timeout to change isExpired after the JWT expires
     const expirationTimeout = setTimeout(() => {
       setIsExpired(true); // Set expiration status after the token's lifespan (e.g., 10 minutes)
     }, 1 * 60 * 1000); // Set this based on your JWT expiration time
-
+  
     return () => {
       clearTimeout(expirationTimeout); // Cleanup timeout on unmount
     };
@@ -56,7 +82,7 @@ export default function HomePage() {
         <h1 className="text-2xl font-bold mb-4">Scan to Login</h1>
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
         {qrCodeUrl ? (
-          <QRCodeSVG value={qrCodeUrl} size={192} />
+          <QRCodeSVG value={qrCodeUrl} size={192} className='mx-auto'/>
         ) : (
           <p>Loading QR Code...</p>
         )}
