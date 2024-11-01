@@ -30,59 +30,19 @@ export default function HomePage() {
   const [isExpired, setIsExpired] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let interval;
-    const fetchQrCode = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.post('/api/qr-code', {});
-
-        if (response.status !== 200) {
-          throw new Error(`Error: ${response.statusText}`);
-        }
-
-        const data = response.data;
-        if (!data.channel_data_hash) {
-          throw new Error('No QR Code found in the response');
-        }
-
-        setQrCodeUrl(data.channel_data_hash);
-        setSessionId(data.sessionId);
+  const fetchQrCode = async () => {
+    try {
+      const res = await axios.post('/api/qr-code', {});
+      if (res.status === 200) {
+        setQrCodeUrl(res.data.channel_data_hash);
+        setSessionId(res.data.sessionId);
         setIsExpired(false);
-        setLoading(false);
-
-        // Set interval based on token expiration (e.g., 10 mins)
-        interval = setTimeout(fetchQrCode, 10 * 60 * 1000);
-      } catch (error) {
-        console.error('Error fetching QR code:', error);
-        setErrorMessage('Could not load QR code. Please try again later.');
-        setIsExpired(true);
       }
-    };
-
-    fetchQrCode();
-    return () => {
-      clearTimeout(interval);
-    };
-  }, []);
-
-  useEffect(() => {
-    console.log('Subscribing to Pusher channel:', sessionId);
-    if (sessionId) {
-  
-      const pusher = initPusher();
-      const channel = pusher.subscribe('private-' + sessionId);
-  
-      channel.bind('login-event', function (data) {
-        handleLogin(data);
-      });
-  
-      return () => {
-        channel.unbind_all();
-        channel.unsubscribe();
-      };
+    } catch (e) {
+      console.error(e);
+      setErrorMessage('Failed to fetch QR Code. Please try again.');
     }
-  }, [sessionId]);
+  }
 
   const handleLogin = async (data) => {
     const token = data.token;
@@ -99,6 +59,24 @@ export default function HomePage() {
     //   console.error(e);
     // }
   };
+
+  const showQrCode = () => {
+    let pusher = initPusher();
+    fetchQrCode().then((res) => {
+      const channel = pusher.subscribe(`private-${sessionId}`);
+      channel.bind('login-event', function (data) {
+        handleLogin(data)
+      });
+    });
+  }
+
+  useEffect(() => {
+    setLoading(true);
+    showQrCode();
+    setInterval(() => {
+      showQrCode();
+    }, 10000);
+  }, []);
 
   return (
     <div className="flex items-center justify-center h-screen">
