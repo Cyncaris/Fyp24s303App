@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
-import styles from "../../styles/Patient.module.css"; // Import CSS Modules stylesheet as styles
+//import styles from "../../styles/Patient.module.css"; // Import CSS Modules stylesheet as styles
 
 const PatientDashboard = () => {
   return (
