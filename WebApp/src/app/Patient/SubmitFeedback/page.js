@@ -29,7 +29,7 @@ export default function SubmitFeedback() {
                     {
                         issues_faced: issueFaced,
                         suggestion: suggestion,
-                        patient_id: 'your_patient_id' // Replace with actual patient_id, perhaps from user session
+                        patient_id: '5dac3f89-0660-4e2f-bb70-6786468ab3b3' // Replace with actual patient_id, perhaps from user session
                     }
                 ]);
 
@@ -57,10 +57,10 @@ export default function SubmitFeedback() {
                     <nav>
                         <ul className="flex space-x-4">
                             <li>
-                                <a href="/Patient/PatientDashboard">Back</a>
+                                <a href="/Patient">Back</a>
                             </li>
                             <li>
-                                <a href="/Patient/PatientDashboard" className="hover:underline">Home</a>
+                                <a href="/Patient" className="hover:underline">Home</a>
                             </li>
                             <li>
                                 <a href="#" className="hover:underline">Logout</a>

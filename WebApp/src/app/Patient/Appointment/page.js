@@ -1,8 +1,8 @@
 'use client';  // Mark this component as a Client Component
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
-import styles from "../../styles/Patient.module.css"; // Import CSS Modules stylesheet as styles
+import styles from "@/app/styles/Patient.module.css"; // Import CSS Modules stylesheet as styles
 import { supabase } from '@/app/lib/supabaseClient'; // Import Supabase client
 
 export default function Appointment() {
@@ -16,10 +16,26 @@ export default function Appointment() {
 
     const patientId = '5dac3f89-0660-4e2f-bb70-6786468ab3b3'; // Replace with dynamic ID if needed
 
+    // Predefined appointment types
+    const appointmentTypes = [
+        "Dental Checkup",
+        "Physical Therapy",
+        "Blood Pressure Check",
+        "Cardiology Follow-up",
+        "Vision Screening"
+    ];
+
+    // Predefined locations
+    const locations = [
+        "Room 101",
+        "Room 102",
+        "Room 201",
+        "Room 305",
+        "Room 410"
+    ];
+
     const openModal = () => setIsOpen(true);
-    const closeModal = () => {
-        setIsOpen(false);
-    };
+    const closeModal = () => setIsOpen(false);
 
     const handleSave = async () => {
         setErrorMessage('');
@@ -48,7 +64,7 @@ export default function Appointment() {
             setLocation('');
             closeModal();
 
-            // Fetch appointments again to update the table
+            // Fetch appointments again to update the list
             fetchAppointments();
         } catch (error) {
             setErrorMessage('Unexpected error: ' + error.message);
@@ -59,7 +75,9 @@ export default function Appointment() {
         const { data, error } = await supabase
             .from('appointments')
             .select('*')
-            .eq('patient_id', patientId);
+            .eq('patient_id', patientId)
+            .eq('is_upcoming', true)  // Only fetch appointments where is_upcoming is true
+            .order('date', { ascending: true });
 
         if (error) {
             setErrorMessage('Failed to fetch appointments: ' + error.message);
@@ -69,7 +87,7 @@ export default function Appointment() {
     };
 
     // Fetch appointments when the component mounts
-    React.useEffect(() => {
+    useEffect(() => {
         fetchAppointments();
     }, []);
 
@@ -78,11 +96,11 @@ export default function Appointment() {
             {/* Header Section */}
             <header className="bg-black text-white py-4 shadow-lg">
                 <div className="container mx-auto px-4 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Appointment</h1>
+                    <h1 className="text-2xl font-bold">Upcoming Appointments</h1>
                     <nav>
                         <ul className="flex space-x-4">
                             <li>
-                                <a href="/Patient/PatientDashboard" className="hover:underline">Home</a>
+                                <a href="/Patient/" className="hover:underline">Home</a>
                             </li>
                             <li>
                                 <a href="#" className="hover:underline">Logout</a>
@@ -110,13 +128,17 @@ export default function Appointment() {
                             <form onSubmit={(e) => e.preventDefault()}>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Title</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         className="mt-1 p-2 w-full border border-gray-300 rounded-md"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         required
-                                    />
+                                    >
+                                        <option value="">Select an Appointment Type</option>
+                                        {appointmentTypes.map((type) => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Date</label>
@@ -140,13 +162,17 @@ export default function Appointment() {
                                 </div>
                                 <div className="mb-4">
                                     <label className="block text-gray-700">Location</label>
-                                    <input
-                                        type="text"
+                                    <select
                                         className="mt-1 p-2 w-full border border-gray-300 rounded-md"
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
                                         required
-                                    />
+                                    >
+                                        <option value="">Select a Location</option>
+                                        {locations.map((loc) => (
+                                            <option key={loc} value={loc}>{loc}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="flex justify-end space-x-4">
                                     <button
@@ -171,24 +197,23 @@ export default function Appointment() {
                 )}
                 <div className="flex items-center justify-center mt-5 mb-5 container">
                     <div className="w-3/4 md:w-1/2 bg-white shadow-lg rounded-lg p-4">
+                        <h2 className="text-lg font-semibold mb-4">Upcoming Appointments</h2>
                         <table className="table-auto min-w-full border border-spacing-4">
                             <thead>
                                 <tr>
-                                    <th>Appointment ID</th>
-                                    <th>Title</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Location</th>
+                                    <th className="text-center">Title</th>
+                                    <th className="text-center">Date</th>
+                                    <th className="text-center">Time</th>
+                                    <th className="text-center">Location</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {appointments.map((appointment) => (
                                     <tr key={appointment.id}>
-                                        <td>{appointment.id}</td>
-                                        <td>{appointment.title}</td>
-                                        <td>{appointment.date}</td>
-                                        <td>{appointment.time}</td>
-                                        <td>{appointment.location}</td>
+                                        <td className="text-center">{appointment.title}</td>
+                                        <td className="text-center">{appointment.date}</td>
+                                        <td className="text-center">{appointment.time}</td>
+                                        <td className="text-center">{appointment.location}</td>
                                     </tr>
                                 ))}
                             </tbody>
