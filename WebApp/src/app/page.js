@@ -75,7 +75,7 @@ export default function HomePage() {
     showQrCode();
     setInterval(() => {
       showQrCode();
-    }, 10000);
+    }, 10000000);
   }, []);
 
   return (
@@ -89,6 +89,7 @@ export default function HomePage() {
           <p>Loading QR Code...</p>
         )}
         {sessionId && <p className="text-gray-500">Session ID: {sessionId}</p>}
+        {qrCodeUrl && <p className="text-gray-500">QR Code: {qrCodeUrl}</p>}
         <button
           onClick={() => setLoading(true)}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
