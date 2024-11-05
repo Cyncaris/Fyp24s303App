@@ -30,16 +30,12 @@ export default function Auth() {
             return;
         }
 
-        // Check if the user is first-time (e.g., through metadata or another flag)
         const { user } = data;
         const isFirstTimeUser = user?.user_metadata?.isFirstTimeUser || false;
 
         if (isFirstTimeUser) {
             Alert.alert('First time user, please complete registration.');
-            // Redirect to registration flow (replace with your registration navigation)
-            // navigation.navigate('Registration');
         } else {
-            // Proceed with biometric authentication if it's not the first time
             authenticateWithBiometrics();
         }
         setLoading(false);
@@ -63,8 +59,6 @@ export default function Auth() {
             if (result.success) {
                 Alert.alert('Authentication successful!');
                 console.log("Login successful, navigating to QrScanner.");
-                // Proceed to the main app or dashboard screen
-                // navigation.navigate('Dashboard');
             } else {
                 Alert.alert('Biometric authentication failed.');
             }
@@ -75,29 +69,42 @@ export default function Auth() {
 
     return (
         <View style={styles.container}>
-            <View style={[styles.verticallySpaced, styles.mt20]}>
+            <View style={styles.inputContainer}>
                 <Input
                     label="Email"
                     leftIcon={{ type: 'font-awesome', name: 'envelope' }}
                     onChangeText={(text) => setEmail(text)}
                     value={email}
-                    placeholder="email@address.com"
+                    placeholder="Enter your email"
                     autoCapitalize="none"
                 />
             </View>
-            <View style={styles.verticallySpaced}>
+            <View style={styles.inputContainer}>
                 <Input
                     label="Password"
                     leftIcon={{ type: 'font-awesome', name: 'lock' }}
                     onChangeText={(text) => setPassword(text)}
                     value={password}
                     secureTextEntry={true}
-                    placeholder="Password"
+                    placeholder="Enter your password"
                     autoCapitalize="none"
                 />
             </View>
-            <View style={[styles.verticallySpaced, styles.mt20]}>
-                <Button title="Sign in" disabled={loading} onPress={signInWithEmail} />
+            <View style={styles.rememberMeContainer}>
+                <Button 
+                    title="Remember me" 
+                    type="clear" 
+                    titleStyle={styles.rememberMeText} 
+                />
+            </View>
+            <View style={styles.buttonContainer}>
+                <Button
+                    title="Login"
+                    disabled={loading}
+                    onPress={signInWithEmail}
+                    buttonStyle={styles.loginButton}
+                    titleStyle={styles.loginButtonText}
+                />
             </View>
         </View>
     );
@@ -105,15 +112,36 @@ export default function Auth() {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 40,
-        padding: 12,
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#ffffff',
     },
-    verticallySpaced: {
-        paddingTop: 4,
-        paddingBottom: 4,
-        alignSelf: 'stretch',
+    inputContainer: {
+        width: '100%',
+        marginVertical: 10,
     },
-    mt20: {
+    rememberMeContainer: {
+        alignItems: 'flex-start',
+        width: '100%',
+        paddingVertical: 10,
+    },
+    rememberMeText: {
+        color: '#333',
+        fontSize: 16,
+    },
+    buttonContainer: {
+        width: '100%',
         marginTop: 20,
+    },
+    loginButton: {
+        backgroundColor: '#000000',
+        borderRadius: 8,
+        height: 50,
+    },
+    loginButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
     },
 });

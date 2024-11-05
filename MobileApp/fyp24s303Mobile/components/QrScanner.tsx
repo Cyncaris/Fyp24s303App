@@ -1,15 +1,11 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import {
-    View, Text, StyleSheet, SafeAreaView, Pressable, Linking,
-    Platform,
-    StatusBar,
+    View, Text, StyleSheet, SafeAreaView, Pressable, Platform, StatusBar,
 } from "react-native";
-import { Link, Stack } from "expo-router";
 import { Session } from '@supabase/supabase-js';
 import { useRef } from 'react';
 
 export default function QrScanner({ session }: { session: Session }) {
-    console.log('QrScanner');
     const qrLock = useRef(false);
     const [permission, requestPermission] = useCameraPermissions();
 
@@ -17,60 +13,65 @@ export default function QrScanner({ session }: { session: Session }) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Stack.Screen options={{ title: "Overview", headerShown: false }} />
-            <Text style={styles.title}>QR Code Scanner</Text>
-            <View style={{ gap: 20 }}>
-                <Pressable onPress={requestPermission}>
-                    <Text style={styles.buttonStyle}>Request Permissions</Text>
-                </Pressable>
-                <SafeAreaView style={StyleSheet.absoluteFillObject}>
-                    <Stack.Screen
-                        options={{
-                            title: "Overview",
-                            headerShown: false,
-                        }}
-                    />
-                    {Platform.OS === "android" ? <StatusBar hidden /> : null}
-                    <CameraView
-                        style={StyleSheet.absoluteFillObject}
-                        facing="back"
-                        onBarcodeScanned={({ data }) => {
-                           console.log('onBarcodeScanned');
-                           console.log(data);
-                        }}
-                    />
-                </SafeAreaView>
-                <Pressable disabled={!isPermissionGranted}>
-                    <Text
-                        style={[
-                            styles.buttonStyle,
-                            { opacity: !isPermissionGranted ? 1 : 1 },
-                        ]}
-                    >
-                        Scan Code
-                    </Text>
-                </Pressable>
-
+            <Text style={styles.title}>Scan QR Code</Text>
+            <View style={styles.cameraContainer}>
+                <CameraView
+                    style={styles.camera}
+                    facing="back"
+                    onBarcodeScanned={({ data }) => {
+                        console.log('onBarcodeScanned');
+                        console.log(data);
+                    }}
+                />
             </View>
-        </SafeAreaView >
+            <Pressable
+                style={styles.logoutButton}
+                disabled={!isPermissionGranted}
+                onPress={requestPermission}
+            >
+                <Text style={styles.logoutButtonText}>Logout</Text>
+            </Pressable>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "black",
-        justifyContent: "space-around",
+        backgroundColor: "#ffffff",
         paddingVertical: 80,
     },
     title: {
-        color: "white",
-        fontSize: 40,
+        color: "#1c1c1e",
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 20,
     },
-    buttonStyle: {
-        color: "#0E7AFE",
-        fontSize: 20,
-        textAlign: "center",
+    cameraContainer: {
+        width: 250,
+        height: 250,
+        borderWidth: 2,
+        borderColor: "black",
+        justifyContent: "center",
+        alignItems: "center",
+        marginBottom: 40,
+    },
+    camera: {
+        width: "100%",
+        height: "100%",
+        backgroundColor: "lightgray",
+    },
+    logoutButton: {
+        backgroundColor: "#000000",
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+    },
+    logoutButtonText: {
+        color: "#ffffff",
+        fontSize: 16,
+        fontWeight: "bold",
     },
 });
