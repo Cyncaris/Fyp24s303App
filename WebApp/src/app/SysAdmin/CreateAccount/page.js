@@ -10,7 +10,7 @@ const CreateAccount = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [role, setRole] = useState('admin'); // Default to 'admin'
+  const [role, setRole] = useState('SysAdmin'); // Default to 'SysAdmin'
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -25,6 +25,20 @@ const CreateAccount = () => {
     let encrypted = cipher.update(qrSecretKey, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return encrypted;
+  };
+
+  // Determine the role_id based on the selected role
+  const getRoleId = (role) => {
+    switch (role) {
+      case 'SysAdmin':
+        return 1;
+      case 'Doctor':
+        return 2;
+      case 'Patient':
+        return 3;
+      default:
+        return 3; // Default to 'Patient' if none selected
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -46,7 +60,7 @@ const CreateAccount = () => {
             first_name: firstName,
             last_name: lastName,
             qr_secret_key: encryptedQrSecretKey, // Store encrypted QR secret key
-            role_id: role === 'admin' ? 1 : 2, // Assume role_id is 1 for admin, 2 for others
+            role_id: getRoleId(role), // Get role_id based on selected role
           },
         },
       });
@@ -163,10 +177,9 @@ const CreateAccount = () => {
                 className="w-full p-2 border border-gray-300 rounded-lg"
                 required
               >
-                <option value="admin">Admin</option>
-                <option value="doctor">Doctor</option>
-                <option value="nurse">Nurse</option>
-                <option value="receptionist">Receptionist</option>
+                <option value="SysAdmin">SysAdmin</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Patient">Patient</option>
               </select>
             </div>
 
@@ -174,7 +187,6 @@ const CreateAccount = () => {
             <button
               type="submit"
               className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full"
-              disabled={false}
             >
               Create Account
             </button>
