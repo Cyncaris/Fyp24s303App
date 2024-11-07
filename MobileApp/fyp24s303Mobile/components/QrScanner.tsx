@@ -15,9 +15,9 @@ export default function QrScanner({ session }: { session: Session }) {
     const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
         setScanned(true);
         alert(`Barcode with type ${type} and data ${data} has been scanned!`);
-        const channel = `private-${data}`;
-        const henlo = "henlo";
-        console.log('hi there');
+        const channel = `1730998352219-c10a0105fdb7060c`;
+        const userName = session.user?.email;
+        console.log('session', session.user);
         // fetch need to be on same network aka same wifi
         try {
             let resp = await fetch('http://192.168.50.13:3000/api/authenticate-qr', {
@@ -26,8 +26,8 @@ export default function QrScanner({ session }: { session: Session }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    'session': henlo,  
-                    'channel': channel,  
+                    'channel': channel,
+                    'user_id': userName, 
                 }),
             });
             

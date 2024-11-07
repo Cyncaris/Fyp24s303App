@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useState, useRef } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import Pusher from 'pusher-js';
-import axios from 'axios';
-import Router from 'next/router';
+import axios from "axios";
+import { useRouter } from 'next/navigation'; 
 
-// Initialize Pusher
 const initPusher = () => {
-  Pusher.logToConsole = true;
+  Pusher.logToConsole = false;
   return new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
     cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
     encrypted: true,
@@ -23,84 +21,150 @@ const initPusher = () => {
   });
 };
 
-export default function HomePage() {
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const [sessionId, setSessionId] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isExpired, setIsExpired] = useState(false);
-  const [loading, setLoading] = useState(true);
+export default function Login() {
+  const [qrData, setQrData] = useState(null);
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const pusherRef = useRef(null);
+  const channelRef = useRef(null);
+  const router = useRouter();
 
-  const fetchQrCode = async () => {
+  const getQRCode = async () => {
     try {
-      const res = await axios.post('/api/qr-code', {});
-      if (res.status === 200) {
-        setQrCodeUrl(res.data.channel_data_hash);
-        setSessionId(res.data.sessionId);
-        setIsExpired(false);
-      }
-    } catch (e) {
-      console.error(e);
-      setErrorMessage('Failed to fetch QR Code. Please try again.');
+      const res = await axios.post('/api/qr-code');
+      if (res.data?.success) {
+        setQrData(res.data.data);
+        return res.data.data;
     }
-  }
-
-  const handleLogin = async (data) => {
-    const token = data.token;
-    const user_id = data.user_id;
-    console.log('Received token:', data.data);
-    console.log('Received user_id:', data);
-    // try {
-    //   const res = await axios.post('/api/verify-token', { token, user_id });
-    //   if (res.status === 200) {
-    //     // Save token, set cookies, and navigate
-    //     await Router.replace('/profile');
-    //   }
-    // } catch (e) {
-    //   console.error(e);
-    // }
+    } catch (e) {
+      console.error('QR Code fetch error:', e);
+      setError('Failed to fetch QR Code. Please try again.');
+    }
+    return null;
   };
 
-  const showQrCode = () => {
-    let pusher = initPusher();
-    fetchQrCode().then((res) => {
-      const channel = pusher.subscribe(`private-${sessionId}`);
-      channel.bind('login-event', function (data) {
-        handleLogin(data)
-      });
+  const handleLogin = async (data) => {
+    console.log('Received login data:', data);
+    try {
+      if (!data?.token || !data?.user_id) {
+        throw new Error('Invalid login data');
+      }
+      console.log('Received login data:', data);
+
+      // Handle the login success
+      // You might want to store the token and redirect
+      localStorage.setItem('auth_token', data.token);
+      console.log('Login successful. Redirecting...');
+      router.push('/Patient')
+
+    } catch (e) {
+      console.error('Login error:', e);
+      setError('Login failed. Please try again.');
+    }
+  };
+
+  const setupPusherChannel = (channelData) => {
+    // Clean up existing connection
+    if (channelRef.current) {
+      channelRef.current.unbind_all();
+      channelRef.current.unsubscribe();
+    }
+
+    // Initialize Pusher if not already done
+    if (!pusherRef.current) {
+      pusherRef.current = initPusher();
+    }
+
+    // Subscribe to the channel
+    const channel = pusherRef.current.subscribe(`private-${channelData.channel}`);
+
+    // Debug: Log channel subscription
+    console.log('Subscribing to channel:', `private-${channelData.channel}`);
+
+    channel.bind('pusher:subscription_succeeded', () => {
+      console.log('Successfully subscribed to channel');
     });
-  }
+
+    channel.bind('pusher:subscription_error', (error) => {
+      console.error('Pusher subscription error:', error);
+      setError('Connection error. Please refresh.');
+    });
+
+    channel.bind('login-event', function (data) {
+      console.log('Received login event:', data);
+      handleLogin(data);
+    });
+
+    channelRef.current = channel;
+  };
+
+  const refreshQRCode = async () => {
+    setLoading(true);
+    setError(null);
+    const data = await getQRCode();
+    if (data) {
+      setupPusherChannel(data);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    setLoading(true);
-    showQrCode();
-    setInterval(() => {
-      showQrCode();
-    }, 10000000);
+    refreshQRCode();
+
+    // Refresh QR code every 2 minutes
+    const intervalId = setInterval(refreshQRCode, 10 * 60 * 1000);
+
+    return () => {
+      clearInterval(intervalId);
+      // Clean up Pusher
+      if (channelRef.current) {
+        channelRef.current.unbind_all();
+        channelRef.current.unsubscribe();
+      }
+      if (pusherRef.current) {
+        pusherRef.current.disconnect();
+      }
+    };
   }, []);
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="p-8 bg-white rounded-lg shadow-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">Scan to Login</h1>
-        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-        {qrCodeUrl ? (
-          <QRCodeSVG value={qrCodeUrl} size={192} className="mx-auto" />
-        ) : (
-          <p>Loading QR Code...</p>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-lg">
+        <h1 className="text-2xl font-bold text-center mb-6">
+          Scan to Login
+        </h1>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+            {error}
+          </div>
         )}
-        {sessionId && <p className="text-gray-500">Session ID: {sessionId}</p>}
-        {qrCodeUrl && <p className="text-gray-500">QR Code: {qrCodeUrl}</p>}
-        <button
-          onClick={() => setLoading(true)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Refresh QR Code
-        </button>
-        {isExpired && <p className="text-red-500">Session has expired. Please request a new QR Code.</p>}
-        <div className="mt-4">
-          <Link href="/register" className="text-gray-700 hover:underline">
-            Don't have an account?
-          </Link>
+
+        <div className="flex flex-col items-center space-y-4">
+          {isLoading ? (
+            <div className="animate-spin h-8 w-8 border-2 border-blue-500 rounded-full border-t-transparent" />
+          ) : qrData ? (
+            <div className="p-4 bg-white rounded-lg border">
+              <QRCodeSVG
+                value={qrData.channel}
+                size={256}
+                level="H"
+              />
+              <div className="mt-2 text-sm text-gray-500 text-center">
+                Scan with your mobile app
+              </div>
+            </div>
+          ) : (
+            <div>Failed to load QR code</div>
+          )}
+
+          <button
+            onClick={refreshQRCode}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Refreshing...' : 'Refresh QR Code'}
+          </button>
         </div>
       </div>
     </div>

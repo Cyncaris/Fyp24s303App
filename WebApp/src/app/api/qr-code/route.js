@@ -1,42 +1,49 @@
-import QRCode from 'qrcode';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+// pages/api/qr-code.js
 import crypto from 'crypto';
 
+// Store active sessions in memory (for testing only)
+const activeSessions = new Map();
+
 export async function POST(req) {
-    const body = await req.json();
-
-    // Generate a unique session ID
-    const sessionId = uuidv4(); // Generates a new unique session ID
-
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-        return new Response(JSON.stringify({ error: 'JWT secret not set' }), {
-            status: 500,
-        });
-    }
-
-    // Generate a JWT token for the session
-    const token = jwt.sign({ sessionId }, secret, { expiresIn: '1m' });
-
-    // Generate QR code from the JWT token
-    let qrCodeDataUrl;
     try {
-        qrCodeDataUrl = await QRCode.toDataURL(token);
+        // Generate random data for channel
+        const timestamp = Date.now();
+        const randomBytes = crypto.randomBytes(8).toString('hex');
+        const channel = `${timestamp}-${randomBytes}`;
+        
+        console.log('Generated channel:', channel);
+        // Store session data temporarily
+        activeSessions.set(channel, {
+            timestamp,
+            status: 'pending'
+        });
+
+        // Clean up old sessions (older than 5 minutes)
+        for (const [key, value] of activeSessions.entries()) {
+            if (Date.now() - value.timestamp > 5 * 60 * 1000) {
+                activeSessions.delete(key);
+            }
+        }
+
+        return new Response(JSON.stringify({
+            success: true,
+            msg: "QR Code generated",
+            data: {
+                channel
+            }
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
     } catch (error) {
-        return new Response(JSON.stringify({ error: 'Failed to generate QR code' }), {
+        console.error('QR generation error:', error);
+        return new Response(JSON.stringify({
+            success: false,
+            msg: "Failed to generate QR code"
+        }), {
             status: 500,
+            headers: { 'Content-Type': 'application/json' }
         });
     }
-
-    // Improved date formatting (consider using a library for more complex needs)
-    const date = new Date();
-    const channel_data = `${date.getDate()}-${date.getMonth() + 1}-${date.getMinutes()}`;
-    const channel_data_hash = crypto.createHash('md5').update(`${channel_data}||${qrCodeDataUrl}`).digest('hex');
-
-    return new Response(JSON.stringify({ channel_data_hash, sessionId }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-    });
 }
