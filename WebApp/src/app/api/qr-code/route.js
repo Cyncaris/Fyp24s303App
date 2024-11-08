@@ -1,36 +1,35 @@
-// pages/api/qr-code.js
 import crypto from 'crypto';
-
-// Store active sessions in memory (for testing only)
-const activeSessions = new Map();
+import { supabase } from '@/app/lib/supabaseClient'; // Import Supabase client
 
 export async function POST(req) {
     try {
-        // Generate random data for channel
-        const timestamp = Date.now();
+        // Generate unique channel identifier
+        const timestamp = new Date();
         const randomBytes = crypto.randomBytes(8).toString('hex');
-        const channel = `${timestamp}-${randomBytes}`;
+        const channel = `${timestamp.getTime()}-${randomBytes}`;
         
-        console.log('Generated channel:', channel);
-        // Store session data temporarily
-        activeSessions.set(channel, {
-            timestamp,
-            status: 'pending'
-        });
+        // Calculate expiration time (5 minutes from now)
+        const expiresAt = new Date(timestamp.getTime() + 5 * 60 * 1000);
 
-        // Clean up old sessions (older than 5 minutes)
-        for (const [key, value] of activeSessions.entries()) {
-            if (Date.now() - value.timestamp > 5 * 60 * 1000) {
-                activeSessions.delete(key);
+        // Store the session data in Supabase
+        const { data, error } = await supabase.from('qr_sessions').insert([
+            {
+                channel,
+                timestamp,
+                status: 'pending',
+                expires_at: expiresAt
             }
+        ]);
+
+        if (error) {
+            throw new Error(`Supabase insert error: ${error.message}`);
         }
 
+        // Return a successful response
         return new Response(JSON.stringify({
             success: true,
             msg: "QR Code generated",
-            data: {
-                channel
-            }
+            data: { channel }
         }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
@@ -38,9 +37,12 @@ export async function POST(req) {
 
     } catch (error) {
         console.error('QR generation error:', error);
+        
+        // Return an error response
         return new Response(JSON.stringify({
             success: false,
-            msg: "Failed to generate QR code"
+            msg: "Failed to generate QR code",
+            error: error.message
         }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
