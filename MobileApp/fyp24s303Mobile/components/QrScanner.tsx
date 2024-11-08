@@ -12,12 +12,11 @@ export default function QrScanner({ session }: { session: Session }) {
 
     const isPermissionGranted = Boolean(permission?.granted);
 
-    const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
+    const handleBarCodeScanned = async ({data }: { data: string }) => {
         setScanned(true);
-        alert(`Barcode with type ${type} and data ${data} has been scanned!`);
-        const channel = `1730998352219-c10a0105fdb7060c`;
+        alert(`Barcode with type and data ${data} has been scanned!`);
+        const channel = `${data}`;
         const userName = session.user?.email;
-        console.log('session', session.user);
         // fetch need to be on same network aka same wifi
         try {
             let resp = await fetch('http://192.168.50.13:3000/api/authenticate-qr', {
@@ -31,7 +30,6 @@ export default function QrScanner({ session }: { session: Session }) {
                 }),
             });
             
-            console.log(resp);
             if (resp.ok) {
                 alert('Session authenticated!');
             } else {

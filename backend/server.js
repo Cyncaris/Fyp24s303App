@@ -44,7 +44,7 @@ app.post('/api/authenticate-qr', async (req, res) => {
     console.log('Received authentication request:', { channel, user_id });
     try {
         // For testing, create a simple token
-        const mockToken = `test_token_${Date.now()}`;
+        
         
         // Update session status
         activeSessions.set(channel, {
@@ -58,7 +58,7 @@ app.post('/api/authenticate-qr', async (req, res) => {
             `private-${channel}`,
             "login-event",
             {
-                token: mockToken,
+                token: channel,
                 user_id,
                 timestamp: Date.now()
             }

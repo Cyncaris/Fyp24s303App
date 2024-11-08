@@ -67,14 +67,15 @@ export default function Login() {
   };
 
   const handleLogin = async (data) => {
-    console.log('Received login data:', data);
+    console.log('Received login data:', data.token);
+    
     try {
-      if (!data?.channel) {
-        throw new Error('Invalid login data');
-      }
+      // if (!data?.channel) {
+      //   throw new Error('Invalid login data');
+      // }
 
       // Validate the QR code session before logging in
-      const isValidSession = await validateQRCode(data.channel);
+      const isValidSession = await validateQRCode(data.token);
       if (!isValidSession) {
         console.warn("Session validation failed. Please refresh the QR code.");
         return;

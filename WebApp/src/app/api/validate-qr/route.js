@@ -1,32 +1,90 @@
+import { NextResponse } from 'next/server';
+import { supabase } from '@/app/lib/supabaseClient';
 
-export async function POST(req, res) {
-    const { channel } = await req.json();
-
-    if (!channel) {
-        return res.status(400).json({ success: false, msg: "Channel is required" });
-    }
-
+export async function POST(req) {
     try {
-        // Retrieve the session from Supabase
-        const { data, error } = await supabase
+        // Parse the request body
+
+        const body = await req.json();
+        const channel = body.channel;
+
+        if (!channel) {
+            return NextResponse.json(
+                { success: false, msg: "Channel token is required" },
+                { status: 400 }
+            );
+        }
+        // First check if session exists and is valid
+        const { data: sessionData, error: sessionError } = await supabase
             .from('qr_sessions')
             .select('*')
             .eq('channel', channel)
-            .single();
+            .maybeSingle();
 
-        if (error || !data) {
-            return res.status(404).json({ success: false, msg: "Session not found or invalid" });
+        if (sessionError) {
+            console.error('Supabase error:', sessionError);
+            return NextResponse.json(
+                { success: false, msg: "Database error" },
+                { status: 500 }
+            );
+        }
+
+        if (!sessionData) {
+            return NextResponse.json(
+                { success: false, msg: "Invalid QR code" },
+                { status: 404 }
+            );
         }
 
         // Check if session has expired
-        if (new Date() > new Date(data.expires_at)) {
-            return res.status(410).json({ success: false, msg: "Session expired" });
+        if (new Date() > new Date(sessionData.expires_at)) {
+            // Update status to expired
+            const { error: updateError } = await supabase
+                .from('qr_sessions')
+                .update({ status: 'expired' })
+                .eq('channel', channel);
+
+            if (updateError) {
+                console.error('Status update error:', updateError);
+            }
+
+            return NextResponse.json(
+                { success: false, msg: "QR code has expired" },
+                { status: 410 }
+            );
         }
 
-        return res.status(200).json({ success: true, msg: "Session is valid", data });
+        // Update status to validated
+        const { error: updateError } = await supabase
+            .from('qr_sessions')
+            .update({ status: 'validated' })
+            .eq('channel', channel);
+
+        if (updateError) {
+            console.error('Status update error:', updateError);
+            return NextResponse.json(
+                { success: false, msg: "Failed to update session status" },
+                { status: 500 }
+            );
+        }
+
+        return NextResponse.json(
+            {
+                success: true,
+                msg: "Valid QR code",
+                data: {
+                    ...sessionData,
+                    status: 'validated'
+                }
+            },
+            { status: 200 }
+        );
 
     } catch (error) {
         console.error('Session validation error:', error);
-        return res.status(500).json({ success: false, msg: "Failed to validate session" });
+        return NextResponse.json(
+            { success: false, msg: "Internal server error" },
+            { status: 500 }
+        );
     }
 }
