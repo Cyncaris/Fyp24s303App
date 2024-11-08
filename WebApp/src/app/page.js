@@ -33,9 +33,9 @@ export default function Login() {
     try {
       const res = await axios.post('/api/qr-code');
       console.log('QR Code API Response:', res);
-      
+      console.log('QR Code API Response Data:', res.data.data.sessionId);
       if (res.data.success) {
-        setQrData(res.data.data);
+        setQrData(res.data.data.sessionId);
         console.log('QR Data Set:', res.data.data);
         return res.data.data;
       } else {
@@ -105,9 +105,9 @@ export default function Login() {
     }
 
     // Subscribe to the channel
-    const channel = pusherRef.current.subscribe(`private-${channelData.channel}`);
+    const channel = pusherRef.current.subscribe(`private-${channelData.sessionId}`);
 
-    console.log('Subscribing to channel:', `private-${channelData.channel}`);
+    console.log('Subscribing to channel:', `private-${channelData.sessionId}`);
 
     channel.bind('pusher:subscription_succeeded', () => {
       console.log('Successfully subscribed to channel');
@@ -170,7 +170,7 @@ export default function Login() {
             <div className="animate-spin h-8 w-8 border-2 border-blue-500 rounded-full border-t-transparent" />
           ) : qrData ? (
             <div className="p-4 bg-white rounded-lg border">
-              <QRCodeSVG value={qrData.channel} size={256} level="H" />
+              <QRCodeSVG value={qrData} size={256} level="H" />
               <div className="mt-2 text-sm text-gray-500 text-center">
                 Scan with your mobile app
               </div>

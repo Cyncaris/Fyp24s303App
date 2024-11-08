@@ -14,7 +14,7 @@ export default function QrScanner({ session }: { session: Session }) {
 
     const handleBarCodeScanned = async ({data }: { data: string }) => {
         setScanned(true);
-        alert(`Barcode with type and data ${data} has been scanned!`);
+        console.log(data);
         const channel = `${data}`;
         const userName = session.user?.email;
         // fetch need to be on same network aka same wifi

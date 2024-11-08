@@ -18,7 +18,7 @@ export async function POST(req) {
         const { data: sessionData, error: sessionError } = await supabase
             .from('qr_sessions')
             .select('*')
-            .eq('channel', channel)
+            .eq('session_id', channel)
             .maybeSingle();
 
         if (sessionError) {
@@ -42,7 +42,7 @@ export async function POST(req) {
             const { error: updateError } = await supabase
                 .from('qr_sessions')
                 .update({ status: 'expired' })
-                .eq('channel', channel);
+                .eq('session_id', channel);
 
             if (updateError) {
                 console.error('Status update error:', updateError);
@@ -58,7 +58,7 @@ export async function POST(req) {
         const { error: updateError } = await supabase
             .from('qr_sessions')
             .update({ status: 'validated' })
-            .eq('channel', channel);
+            .eq('session_id', channel);
 
         if (updateError) {
             console.error('Status update error:', updateError);
