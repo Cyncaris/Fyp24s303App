@@ -4,6 +4,7 @@ import {
 } from "react-native";
 import { Session } from '@supabase/supabase-js';
 import { useRef, useState } from 'react';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function QrScanner({ session }: { session: Session }) {
     const qrLock = useRef(false);
@@ -14,9 +15,26 @@ export default function QrScanner({ session }: { session: Session }) {
 
     const handleBarCodeScanned = async ({data }: { data: string }) => {
         setScanned(true);
-        console.log(data);
+        
+        try{
+            const isAuthenticated = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Authenticate with Biometrics',
+                fallbackLabel: 'Enter Passcode',
+            });
+    
+            if (!isAuthenticated.success) {
+                alert('Authentication failed!');
+                return;
+            }
+        }
+        catch (error) {
+            console.error('Error:', error);
+        }
+       
+
         const channel = `${data}`;
-        const userName = session.user?.email;
+        const user_id = session.user?.id;
+        
         // fetch need to be on same network aka same wifi
         try {
             let resp = await fetch('http://192.168.50.13:3000/api/authenticate-qr', {
@@ -26,7 +44,7 @@ export default function QrScanner({ session }: { session: Session }) {
                 },
                 body: JSON.stringify({
                     'channel': channel,
-                    'user_id': userName, 
+                    'user_id': user_id, 
                 }),
             });
             

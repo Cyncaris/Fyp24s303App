@@ -81,10 +81,27 @@ export default function Login() {
         return;
       }
 
+      const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
+
+      const userRole = user.data.data.role_id;
+      if (userRole == 1) {
+        console.log('Login successful. Redirecting...');
+        router.push('/Doctor/MainDashboard');
+      }
+      else if (userRole == 2) {
+        console.log('Login successful. Redirecting...');
+        router.push('/Patient');
+      }
+      else if (userRole == 3) {
+        console.log('Login successful. Redirecting...');
+        router.push('/SysAdmin/MainDashboard');
+      }
+      else {
+        console.error('Invalid user role:', user.data.role_id);
+        setError('Login failed. Please try again.');
+      }
       // Store token or other data if validation is successful
-      localStorage.setItem('auth_token', data.token);
-      console.log('Login successful. Redirecting...');
-      router.push('/Patient');
+      // localStorage.setItem('auth_token', data.token);
 
     } catch (e) {
       console.error('Login error:', e);

@@ -60,6 +60,7 @@ export default function Auth() {
                 Alert.alert('Authentication successful!');
                 console.log("Login successful, navigating to QrScanner.");
             } else {
+                supabase.auth.signOut();
                 Alert.alert('Biometric authentication failed.');
             }
         } catch (error) {
