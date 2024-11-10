@@ -68,7 +68,7 @@ export default function Login() {
 
   const handleLogin = async (data) => {
     console.log('Received login data:', data.token);
-    
+
     try {
       // if (!data?.channel) {
       //   throw new Error('Invalid login data');
@@ -80,33 +80,60 @@ export default function Login() {
         console.warn("Session validation failed. Please refresh the QR code.");
         return;
       }
-
-      const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
-
-      const userRole = user.data.data.role_id;
-      if (userRole == 1) {
-        console.log('Login successful. Redirecting...');
-        router.push('/Doctor/MainDashboard');
-      }
-      else if (userRole == 2) {
-        console.log('Login successful. Redirecting...');
-        router.push('/Patient');
-      }
-      else if (userRole == 3) {
-        console.log('Login successful. Redirecting...');
-        router.push('/SysAdmin/MainDashboard');
-      }
-      else {
-        console.error('Invalid user role:', user.data.role_id);
-        setError('Login failed. Please try again.');
-      }
-      // Store token or other data if validation is successful
-      // localStorage.setItem('auth_token', data.token);
-
-    } catch (e) {
-      console.error('Login error:', e);
+    } catch (error) {
+      console.error('Login error:', error);
       setError('Login failed. Please try again.');
+      return;
     }
+    const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
+    console.log('User data:', user.data.data.name);
+
+    try {
+      const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
+        userId: data.user_id,
+        username: user.data.data.name // Make sure this matches your user data structure
+      }, {
+        withCredentials: true // Important for handling cookies
+      });
+
+      if (!tokenResponse.data.success) {
+        throw new Error('Failed to generate token');
+      }
+
+      console.log('Token generated successfully');
+
+      // // Store user info if needed (avoid storing sensitive data)
+      // localStorage.setItem('user_info', JSON.stringify({
+      //   userId: data.user_id,
+      //   role: user.data.data.role_id
+      // }));
+
+      // Handle routing based on role
+      const userRole = user.data.data.role_id;
+      switch (userRole) {
+        case 1:
+          console.log('Redirecting to Doctor dashboard...');
+          router.push('/Doctor/MainDashboard');
+          break;
+        case 2:
+          console.log('Redirecting to Patient dashboard...');
+          router.push('/Patient');
+          break;
+        case 3:
+          console.log('Redirecting to Admin dashboard...');
+          router.push('/SysAdmin/MainDashboard');
+          break;
+        default:
+          console.error('Invalid user role:', userRole);
+          setError('Login failed: Invalid user role');
+          return;
+      }
+
+    } catch (tokenError) {
+      console.error('Token generation error:', tokenError);
+      setError('Failed to create session. Please try again.');
+    }
+
   };
 
   const setupPusherChannel = (channelData) => {

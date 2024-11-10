@@ -2,12 +2,19 @@ const express = require('express');
 const Pusher = require('pusher');
 const cors = require('cors');
 require('dotenv').config();
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const jwt = require('jsonwebtoken');
-
-app.use(cors());
+app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
+app.use(cookieParser());
+
 
 // Initialize Pusher
 const pusher = new Pusher({
@@ -25,36 +32,12 @@ if (!key) {
 
 const secretKey = process.env.JWT_SECRET;
 
-// Store active sessions (for testing)
-const activeSessions = new Map();
-
-// Endpoint to check session status
-app.get('/api/session-status/:channel', (req, res) => {
-    const channel = req.params.channel;
-    const session = activeSessions.get(channel);
-
-    res.json({
-        success: true,
-        data: {
-            status: session ? session.status : 'not_found'
-        }
-    });
-});
 
 // QR authentication endpoint
 app.post('/api/authenticate-qr', async (req, res) => {
     const { channel, user_id } = req.body;
     console.log('Received authentication request:', { channel, user_id });
     try {
-        // For testing, create a simple token
-
-
-        // Update session status
-        activeSessions.set(channel, {
-            status: 'authenticated',
-            user_id,
-            timestamp: Date.now()
-        });
 
         // Trigger Pusher event
         await pusher.trigger(
@@ -85,34 +68,88 @@ app.post('/api/authenticate-qr', async (req, res) => {
     }
 });
 
-app.post('/api/sign-token', async (req, res) => {
+app.post('/api/gen-token', async (req, res) => {
     const { username, userId } = req.body;
+    console.log('Received token request:', { username, userId });
 
-    // Validate request body
+    // Validate request body    
     if (!username || !userId) {
-        return res.status(400).json({ message: 'Username and userId are required' });
+        return res.status(400).json({ 
+            success: false,
+            message: 'Username and userId are required' 
+        });
     }
 
     // Payload to include in the token
     const payload = {
-        id: userId, // Include userId in the payload
+        id: userId,
         username: username,
+        iat: Math.floor(Date.now() / 1000), // Issued at time
     };
 
     console.log('Signing token for user:', payload);
 
-    // Sign the token (with a 1-hour expiration, for example)
     try {
-        const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
-        // Send the token and userId in the response
-        res.json({
-            token: token,
-            userId: userId,
+        const token = jwt.sign(payload, secretKey, { 
+            expiresIn: '1h'  // 1 hour expiration
         });
+
+        // Set cookie with enhanced security options
+        res.cookie('authToken', token, { 
+            httpOnly: true,  // Prevents JavaScript access
+            secure: process.env.NODE_ENV === 'production',  // HTTPS only in production
+            sameSite: 'strict',  // CSRF protection
+            maxAge: 3600000,  // 1 hour in milliseconds
+            path: '/',  // Cookie is available for all paths
+            domain: process.env.NODE_ENV === 'production' ? 'yoursite.com' : 'localhost'
+        });
+
+        // Send success response
+        return res.status(200).json({ 
+            success: true,
+            message: 'Token generated successfully',
+            user: {
+                userId,
+                username
+            }
+        });
+
     } catch (error) {
-        res.status(500).json({ message: 'Error signing token', error: error.message });
+        console.error('Token generation error:', error);
+        return res.status(500).json({ 
+            success: false,
+            message: 'Error generating token',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
     }
 });
+
+
+app.get('/protected', verifyToken, (req, res) => {
+    // req.user now contains userId and username from the token
+    res.json({
+        message: `Hello ${req.user.username}!`,
+        userId: req.user.userId
+    });
+});
+
+// Verify token middleware
+function verifyToken(req, res, next) {
+    const token = req.cookies.authToken;
+
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded; // Contains userId and username
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: 'Invalid token' });
+    }
+}
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
