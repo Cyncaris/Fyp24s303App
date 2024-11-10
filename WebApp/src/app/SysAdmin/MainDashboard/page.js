@@ -1,8 +1,12 @@
 import React from "react";
-import Link from "next/link"; // Use Next.js Link for navigation
+import Link from "next/link"; // Use Next.js Link for navigatio
+
+import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object
 
 const Dashboard = () => {
   return (
+    <RoleBasedRoute allowedRoles={[ROLES.ADMIN]}> {/* Only allow SysAdmin role */}
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-blue-600 text-white py-4 shadow-lg">
@@ -54,6 +58,7 @@ const Dashboard = () => {
         </div>
       </footer>
     </div>
+  </RoleBasedRoute>
   );
 };
 

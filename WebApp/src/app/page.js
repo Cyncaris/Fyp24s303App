@@ -87,11 +87,13 @@ export default function Login() {
     }
     const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
     console.log('User data:', user.data.data.name);
+    console.log
 
     try {
       const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
         userId: data.user_id,
-        username: user.data.data.name // Make sure this matches your user data structure
+        username: user.data.data.name, // Make sure this matches your user data structure
+        userRole : user.data.data.role_id
       }, {
         withCredentials: true // Important for handling cookies
       });

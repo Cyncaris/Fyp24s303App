@@ -69,7 +69,7 @@ app.post('/api/authenticate-qr', async (req, res) => {
 });
 
 app.post('/api/gen-token', async (req, res) => {
-    const { username, userId } = req.body;
+    const { username, userId, userRole } = req.body;
     console.log('Received token request:', { username, userId });
 
     // Validate request body    
@@ -84,6 +84,7 @@ app.post('/api/gen-token', async (req, res) => {
     const payload = {
         id: userId,
         username: username,
+        role: userRole,
         iat: Math.floor(Date.now() / 1000), // Issued at time
     };
 
@@ -125,31 +126,60 @@ app.post('/api/gen-token', async (req, res) => {
 });
 
 
-app.get('/protected', verifyToken, (req, res) => {
-    // req.user now contains userId and username from the token
-    res.json({
-        message: `Hello ${req.user.username}!`,
-        userId: req.user.userId
-    });
-});
-
 // Verify token middleware
 function verifyToken(req, res, next) {
     const token = req.cookies.authToken;
 
     if (!token) {
-        return res.status(401).json({ error: 'No token provided' });
+        return res.status(401).json({ 
+            success: false, 
+            message: 'No token provided' 
+        });
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Contains userId and username
+        const decoded = jwt.verify(token, secretKey);
+        
+        // Attach user info to request object instead of sending response
+        req.user = {
+            userId: decoded.id,
+            username: decoded.username,
+            role: decoded.role
+        };
+        
+        // Pass control to next middleware
         next();
+        
     } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' });
+        if (error.name === 'TokenExpiredError') {
+            res.clearCookie('authToken');
+            return res.status(401).json({ 
+                success: false,
+                message: 'Token expired' 
+            });
+        }
+        return res.status(401).json({ 
+            success: false,
+            message: 'Invalid token' 
+        });
     }
 }
 
+// Separate route for token verification (for your frontend RoleBasedRoute)
+app.get('/api/verify-token', verifyToken, (req, res) => {
+    res.json({
+        success: true,
+        user: req.user
+    });
+});
+
+// Your protected route
+app.get('/protected', verifyToken, (req, res) => {
+    res.json({
+        message: `Hello ${req.user.username}!`,
+        userId: req.user.userId
+    });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
