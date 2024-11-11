@@ -48,52 +48,34 @@ export default function Login() {
     return null;
   };
 
-  const validateQRCode = async (channel) => {
-    try {
-      const res = await axios.post('/api/validate-qr', { channel });
-      if (res.data.success) {
-        console.log('Session is valid:', res.data);
-        return true;
-      } else {
-        console.warn('Validation failed:', res.data.msg);
-        setError(res.data.msg);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error validating session:", error);
-      setError('Error validating session. Please try again.');
-      return false;
-    }
-  };
 
   const handleLogin = async (data) => {
     console.log('Received login data:', data.token);
+    console.log('Received user data:', data.user_id);
 
-    try {
-      // if (!data?.channel) {
-      //   throw new Error('Invalid login data');
-      // }
+    // try {
+    //   // if (!data?.channel) {
+    //   //   throw new Error('Invalid login data');
+    //   // }
 
-      // Validate the QR code session before logging in
-      const isValidSession = await validateQRCode(data.token);
-      if (!isValidSession) {
-        console.warn("Session validation failed. Please refresh the QR code.");
-        return;
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Login failed. Please try again.');
-      return;
-    }
-    const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
-    console.log('User data:', user.data.data.name);
-    console.log
+    //   // Validate the QR code session before logging in
+    //   const isValidSession = await validateQRCode(data.token);
+    //   if (!isValidSession) {
+    //     console.warn("Session validation failed. Please refresh the QR code.");
+    //     return;
+    //   }
+    // } catch (error) {
+    //   console.error('Login error:', error);
+    //   setError('Login failed. Please try again.');
+    //   return;
+    // }
+    // const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
+    // console.log('User data:', user.data.data.name);
+    // console.log
 
     try {
       const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
         userId: data.user_id,
-        username: user.data.data.name, // Make sure this matches your user data structure
-        userRole : user.data.data.role_id
       }, {
         withCredentials: true // Important for handling cookies
       });
@@ -110,8 +92,11 @@ export default function Login() {
       //   role: user.data.data.role_id
       // }));
 
-      // Handle routing based on role
-      const userRole = user.data.data.role_id;
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
+        withCredentials: true
+      });
+
+      const userRole = response.data.user.role;
       switch (userRole) {
         case 1:
           console.log('Redirecting to Doctor dashboard...');

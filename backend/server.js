@@ -3,9 +3,15 @@ const Pusher = require('pusher');
 const cors = require('cors');
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
+const { supabase } = require('./config/supabase');  
+const auth = require('./auth');
+
+// Add this debug log to verify Supabase client initialization
+console.log('Supabase client initialized:', !!supabase.from);
 
 const app = express();
 const jwt = require('jsonwebtoken');
+
 app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
@@ -37,6 +43,13 @@ const secretKey = process.env.JWT_SECRET;
 app.post('/api/authenticate-qr', async (req, res) => {
     const { channel, user_id } = req.body;
     console.log('Received authentication request:', { channel, user_id });
+
+    const sessionResponse = await verifySessionId(channel);
+    if (sessionResponse.status !== 200) {
+        return res.status(sessionResponse.status).json(sessionResponse.body);
+    }
+
+    console.log('Session verified:', sessionResponse);
     try {
 
         // Trigger Pusher event
@@ -44,7 +57,6 @@ app.post('/api/authenticate-qr', async (req, res) => {
             `private-${channel}`,
             "login-event",
             {
-                token: channel,
                 user_id,
                 timestamp: Date.now()
             }
@@ -69,22 +81,24 @@ app.post('/api/authenticate-qr', async (req, res) => {
 });
 
 app.post('/api/gen-token', async (req, res) => {
-    const { username, userId, userRole } = req.body;
-    console.log('Received token request:', { username, userId });
+    const { userId } = req.body;
+    console.log('Received token request:', { userId });
+
+    const user = await getUserById(userId);
 
     // Validate request body    
-    if (!username || !userId) {
+    if ( !userId) {
         return res.status(400).json({ 
             success: false,
-            message: 'Username and userId are required' 
+            message: 'userId are required' 
         });
     }
 
     // Payload to include in the token
     const payload = {
         id: userId,
-        username: username,
-        role: userRole,
+        username: user.name,
+        role: user.role_id,
         iat: Math.floor(Date.now() / 1000), // Issued at time
     };
 
@@ -109,10 +123,6 @@ app.post('/api/gen-token', async (req, res) => {
         return res.status(200).json({ 
             success: true,
             message: 'Token generated successfully',
-            user: {
-                userId,
-                username
-            }
         });
 
     } catch (error) {
@@ -124,6 +134,119 @@ app.post('/api/gen-token', async (req, res) => {
         });
     }
 });
+
+
+
+async function getUserById(user_id) {
+    if (!user_id) {
+        throw new Error('Missing user_id parameter');
+    }
+
+    const { data, error } = await supabase
+        .from('useraccount')
+        .select('*')
+        .eq('id', user_id)
+        .single();
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+   const name = `${data.first_name} ${data.last_name}`;
+   console.log('User data:', name);
+
+    return {
+        user_id: data.id,
+        email: data.email,
+        name: name,
+        role_id: data.role_id,
+    };
+}
+
+// verify sessionId
+async function verifySessionId(channel) {
+    try {
+        if (!channel) {
+            return {
+                status: 400,
+                success: false,
+                msg: "Channel token is required"
+            };
+        }
+
+        const { data: sessionData, error: sessionError } = await supabase
+            .from('qr_sessions')
+            .select('*')
+            .eq('session_id', channel)
+            .maybeSingle();
+
+        if (sessionError) {
+            console.error('Supabase error:', sessionError);
+            return {
+                status: 500,
+                success: false,
+                msg: "Database error"
+            };
+        }
+
+        if (!sessionData) {
+            return {
+                status: 404,
+                success: false,
+                msg: "Invalid QR code"
+            };
+        }
+
+        // Check if session has expired
+        if (new Date() > new Date(sessionData.expires_at)) {
+            // Update status to expired
+            const { error: updateError } = await supabase
+                .from('qr_sessions')
+                .update({ status: 'expired' })
+                .eq('session_id', channel);
+
+            if (updateError) {
+                console.error('Status update error:', updateError);
+            }
+
+            return {
+                status: 410,
+                success: false,
+                msg: "QR code has expired"
+            };
+        }
+
+        // Update status to validated
+        const { error: updateError } = await supabase
+            .from('qr_sessions')
+            .update({ status: 'validated' })
+            .eq('session_id', channel);
+
+        if (updateError) {
+            console.error('Status update error:', updateError);
+            return {
+                status: 500,
+                success: false,
+                msg: "Failed to update session status"
+            };
+        }
+        return {
+            status: 200,
+            success: true,
+            msg: "Valid QR code",
+            
+        };
+
+    } catch (error) {
+        // Log any unexpected errors but don't throw them
+        console.error('Unexpected error in session validation:', error);
+        return {
+            status: 500,
+            success: false,
+            msg: "An unexpected error occurred"
+        };
+    }
+}
 
 
 // Verify token middleware
@@ -180,6 +303,23 @@ app.get('/protected', verifyToken, (req, res) => {
         userId: req.user.userId
     });
 });
+
+
+
+app.get('/profile', auth.checkAuth, (req, res) => {
+    // Common pattern for success response
+    res.json({
+        success: true,
+        data: {
+            userId: req.user.id,
+            username: req.user.username,
+            email: req.user.email,
+            // any other user data you want to send
+        },
+        message: "Profile retrieved successfully"
+    });
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

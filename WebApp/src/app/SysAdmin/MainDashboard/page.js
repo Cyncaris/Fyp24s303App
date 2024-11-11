@@ -1,10 +1,50 @@
-import React from "react";
-import Link from "next/link"; // Use Next.js Link for navigatio
+'use client';
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link"; // Use Next.js Link for navigation
+import axios from "axios";
 
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object
 
 const Dashboard = () => {
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
+          withCredentials: true
+        });
+
+        if (!response.status === 200) {
+          throw new Error('Failed to fetch user profile');
+        }
+
+        const data = response.data;
+        console.log('User Profile:', data.user);
+        const testuser =  {
+          username: data.user.username,
+          role: data.user.role
+        }
+        
+        
+        console.log(testuser);
+        if (data.success) {
+          setUser(testuser); // The user data from your verify-token endpoint
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   return (
     <RoleBasedRoute allowedRoles={[ROLES.ADMIN]}> {/* Only allow SysAdmin role */}
     <div className="bg-gray-100 min-h-screen flex flex-col">
@@ -12,6 +52,7 @@ const Dashboard = () => {
       <header className="bg-blue-600 text-white py-4 shadow-lg">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h2 className="text-lg">Welcome, {user.username}</h2> {/* Display user name */}
           <nav>
             <ul className="flex space-x-4">
               <li>
