@@ -35,26 +35,22 @@ const Dashboard = () => {
   };
 
   const Logout = async () => {
-     try {
-        // 1. Call backend to clear cookie
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
-            withCredentials: true
-        });
-
-        if (!response.status === 200) {
-            throw new Error('Failed to log out');
-        }
-        else {
-            // 2. Redirect to login page
-            router.push('/');
-        }
-
-     } catch (error) {
-        console.error('Error logging out:', error);
-     }
-
-          
-    };
+    try {
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
+      }
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
 
   useEffect(() => {

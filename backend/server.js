@@ -336,7 +336,7 @@ app.post('/logout', (req, res) => {
         // 2. Optional: If you're using sessions or tokens storage
         // await invalidateToken(req.user.id);  // If you store tokens in DB
         // req.session.destroy();               // If using sessions
-
+        console.log('Logged out successfully');
         res.json({
             success: true,
             message: "Logged out successfully"
