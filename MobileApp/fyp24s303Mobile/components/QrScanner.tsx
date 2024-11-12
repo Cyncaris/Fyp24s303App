@@ -24,6 +24,7 @@ export default function QrScanner({ session }: { session: Session }) {
     
             if (!isAuthenticated.success) {
                 alert('Authentication failed!');
+                supabase.auth.signOut();
                 return;
             }
         }
