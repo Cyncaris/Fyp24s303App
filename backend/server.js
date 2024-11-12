@@ -40,7 +40,7 @@ const secretKey = process.env.JWT_SECRET;
 
 
 // QR authentication endpoint
-app.post('/api/authenticate-qr', async (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { channel, user_id } = req.body;
     console.log('Received authentication request:', { channel, user_id });
 
@@ -174,10 +174,12 @@ async function verifySessionId(channel) {
             };
         }
 
+        const session_id = channel.split('login-')[1];  // Extract session ID from channel name
+
         const { data: sessionData, error: sessionError } = await supabase
             .from('qr_sessions')
             .select('*')
-            .eq('session_id', channel)
+            .eq('session_id', session_id)
             .maybeSingle();
 
         if (sessionError) {
@@ -320,6 +322,33 @@ app.get('/profile', auth.checkAuth, (req, res) => {
     });
 });
 
+app.post('/logout', (req, res) => {
+    // Backend cleanup
+    try {
+        // 1. Clear the authentication cookie
+        res.clearCookie('authToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            path: '/'
+        });
+
+        // 2. Optional: If you're using sessions or tokens storage
+        // await invalidateToken(req.user.id);  // If you store tokens in DB
+        // req.session.destroy();               // If using sessions
+
+        res.json({
+            success: true,
+            message: "Logged out successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Logout failed",
+            error: error.message
+        });
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

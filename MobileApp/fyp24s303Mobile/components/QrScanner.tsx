@@ -30,32 +30,37 @@ export default function QrScanner({ session }: { session: Session }) {
         catch (error) {
             console.error('Error:', error);
         }
-       
-
+        
         const channel = `${data}`;
         const user_id = session.user?.id;
+        if (channel.includes('login-')) {
+            try {
+                let resp = await fetch('http://192.168.50.13:3000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        'channel': channel,
+                        'user_id': user_id, 
+                    }),
+                });
+                
+                if (resp.ok) {
+                    alert('Session authenticated!');
+                } else {
+                    alert('Session authentication failed!');
+                }
+            }catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        else if (channel.includes('restricted-')) {
+            const token = channel.split('restricted-')[1];
+        }
         
         // fetch need to be on same network aka same wifi
-        try {
-            let resp = await fetch('http://192.168.50.13:3000/api/authenticate-qr', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    'channel': channel,
-                    'user_id': user_id, 
-                }),
-            });
-            
-            if (resp.ok) {
-                alert('Session authenticated!');
-            } else {
-                alert('Session authentication failed!');
-            }
-        }catch (error) {
-            console.error('Error:', error);
-        }
+        
     };
 
     // const onScanned = async (sessionId) => {

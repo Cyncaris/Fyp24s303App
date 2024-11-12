@@ -35,9 +35,10 @@ export default function Login() {
       console.log('QR Code API Response:', res);
       console.log('QR Code API Response Data:', res.data.data.sessionId);
       if (res.data.success) {
-        setQrData(res.data.data.sessionId);
-        console.log('QR Data Set:', res.data.data);
-        return res.data.data;
+        const qr_url = `login-${res.data.data.sessionId}`;
+        setQrData(qr_url);
+        console.log('QR Data Set:', qr_url);
+        return qr_url;
       } else {
         throw new Error('Invalid response structure');
       }
@@ -125,6 +126,8 @@ export default function Login() {
 
   const setupPusherChannel = (channelData) => {
     // Clean up existing connection
+
+    console.log('Channel Data:', channelData);
     if (channelRef.current) {
       channelRef.current.unbind_all();
       channelRef.current.unsubscribe();
@@ -136,9 +139,9 @@ export default function Login() {
     }
 
     // Subscribe to the channel
-    const channel = pusherRef.current.subscribe(`private-${channelData.sessionId}`);
+    const channel = pusherRef.current.subscribe(`private-${channelData}`);
 
-    console.log('Subscribing to channel:', `private-${channelData.sessionId}`);
+    console.log('Subscribing to channel:', `private-${channelData}`);
 
     channel.bind('pusher:subscription_succeeded', () => {
       console.log('Successfully subscribed to channel');
