@@ -99,6 +99,7 @@ app.post('/api/gen-token', async (req, res) => {
         id: userId,
         username: user.name,
         role: user.role_id,
+        restricted: false,  // Added this line
         iat: Math.floor(Date.now() / 1000), // Issued at time
     };
 
@@ -322,7 +323,8 @@ function verifyToken(req, res, next) {
         req.user = {
             userId: decoded.id,
             username: decoded.username,
-            role: decoded.role
+            role: decoded.role,
+            restricted: decoded.restricted
         };
         
         // Pass control to next middleware

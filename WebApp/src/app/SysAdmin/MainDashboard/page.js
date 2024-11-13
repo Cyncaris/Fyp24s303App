@@ -59,26 +59,32 @@ const Dashboard = () => {
   // Function to handle QR code authentication completion
   const handleQrAuthenticated = async (data) => {
     try {
-      const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
+      const tokeUpdate = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-token`, {
         userId: data.user_id,
       }, {
         withCredentials: true // Important for handling cookies
       });
 
-      if (!tokenResponse.data.success) {
+      if (!tokeUpdate.data.success) {
         throw new Error('Failed to generate token');
       }
     }catch (tokenError) {
       console.error('Token generation error:', tokenError);
       setError('Failed to create session. Please try again.');
     }
-    
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
+      withCredentials: true
+    });
 
-    setQrModalVisible(false);
-    if (destinationRoute === 'ManageAccount') {
-      router.push('/SysAdmin/ManageAccountDashboard');
-    } else if (destinationRoute === 'ManageRole') {
-      router.push('/SysAdmin/ManageRoleDashboard');
+    if (response.status !== 200) {
+      throw new Error('Failed to verify token');
+    } else {
+      setQrModalVisible(false);
+      if (destinationRoute === 'ManageAccount') {
+        router.push('/SysAdmin/ManageAccountDashboard');
+      } else if (destinationRoute === 'ManageRole') {
+        router.push('/SysAdmin/ManageRoleDashboard');
+      }
     }
   };
 
@@ -165,24 +171,30 @@ const Dashboard = () => {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
           withCredentials: true
         });
-
-        if (!response.status === 200) {
+        if (response.status !== 200) {
+          console.log("response", response);  
           throw new Error('Failed to fetch user profile');
         }
         
         const data = response.data;
-        const testuser =  {
-          username: data.user.username,
-          role: data.user.role
-        }
         
-        
-        console.log(testuser);
         if (data.success) {
-          setUser(testuser); // The user data from your verify-token endpoint
+          const userProfile = {
+            username: data.user.username,
+            role: data.user.role
+          };
+          
+          setUser(userProfile);
+          // Only redirect to home if you really need to
+          // router.push('/') // Remove this if you want to stay on current page
+        } else {
+          throw new Error('Verification failed');
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        setUser(null);
+        document.cookie = 'authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        router.push('/unauthorized');
       } finally {
         setLoading(false);
       }
@@ -201,67 +213,68 @@ const Dashboard = () => {
 
   return (
     <RoleBasedRoute allowedRoles={[ROLES.ADMIN]}> {/* Only allow SysAdmin role */}
-    <div className="bg-gray-100 min-h-screen flex flex-col">
-      {/* Header Section */}
-      <header className="bg-blue-600 text-white py-4 shadow-lg">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          <h2 className="text-lg">Welcome, {user.username}</h2> {/* Display user name */}
-          <nav>
-            <ul className="flex space-x-4">
-              <li>
-                <a href="#" className="hover:underline">Home</a> {/* Link to home page */}
-              </li>
-              <li>
-                <a onClick={Logout} className="hover:underline">Logout</a> {/* Link to logout or similar action */}
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
-
-      {/* Main Content Section */}
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">Manage Your Dashboard</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Manage Account Link */}
-            <Link
-              href="/SysAdmin/ManageAccountDashboard" // Path to the Manage Account page
-              className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
-              onClick={(e) => handleLinkClick('ManageAccount',e)} // Handle the link click event
-            >
-              <span className="font-bold text-lg">Manage Account</span>
-              <i className="fas fa-user-cog text-2xl"></i>
-            </Link>
-
-            {/* Manage Role Link */}
-            <a
-              href="/SysAdmin/ManageRoleDashboard" // Placeholder link, replace with actual URL if available
-              className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
-            >
-              <span className="font-bold text-lg">Manage Role</span>
-              <i className="fas fa-users-cog text-2xl"></i>
-            </a>
+      <div className="bg-gray-100 min-h-screen flex flex-col">
+        {/* Header Section */}
+        <header className="bg-blue-600 text-white py-4 shadow-lg">
+          <div className="container mx-auto px-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <h2 className="text-lg">Welcome, {user.username}</h2> {/* Display user name */}
+            <nav>
+              <ul className="flex space-x-4">
+                <li>
+                  <a href="#" className="hover:underline">Home</a> {/* Link to home page */}
+                </li>
+                <li>
+                  <a onClick={Logout} className="hover:underline">Logout</a> {/* Link to logout or similar action */}
+                </li>
+              </ul>
+            </nav>
           </div>
-        </div>
-        {isQrModalVisible && (
-        <QrCodeModal 
-          qrData={qrData} // Pass qrData as prop
-          error={error}   // Pass error as prop
-          loading={loading} // Pass loading as prop
-          closeModal={closeModal} />
-      )}
-      </main>
+        </header>
 
-      {/* Footer Section */}
-      <footer className="bg-gray-800 text-white py-4">
-        <div className="container mx-auto px-4 text-center">
-          &copy; 2023 Hospital App. All rights reserved.
-        </div>
-      </footer>
-    </div>
-  </RoleBasedRoute>
+        {/* Main Content Section */}
+        <main className="flex-grow container mx-auto px-4 py-8">
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Manage Your Dashboard</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Manage Account Link */}
+              <Link
+                href="/SysAdmin/ManageAccountDashboard" // Path to the Manage Account page
+                className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
+                onClick={(e) => handleLinkClick('ManageAccount',e)} // Handle the link click event
+              >
+                <span className="font-bold text-lg">Manage Account</span>
+                <i className="fas fa-user-cog text-2xl"></i>
+              </Link>
+
+              {/* Manage Role Link */}
+              <a
+                href="/SysAdmin/ManageRoleDashboard" // Placeholder link, replace with actual URL if available
+                className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
+                onClick={(e) => handleLinkClick('ManageRole',e)}
+              >
+                <span className="font-bold text-lg">Manage Role</span>
+                <i className="fas fa-users-cog text-2xl"></i>
+              </a>
+            </div>
+          </div>
+          {isQrModalVisible && (
+          <QrCodeModal 
+            qrData={qrData} // Pass qrData as prop
+            error={error}   // Pass error as prop
+            loading={loading} // Pass loading as prop
+            closeModal={closeModal} />
+        )}
+        </main>
+
+        {/* Footer Section */}
+        <footer className="bg-gray-800 text-white py-4">
+          <div className="container mx-auto px-4 text-center">
+            &copy; 2023 Hospital App. All rights reserved.
+          </div>
+        </footer>
+      </div>
+    </RoleBasedRoute>
   );
 };
 

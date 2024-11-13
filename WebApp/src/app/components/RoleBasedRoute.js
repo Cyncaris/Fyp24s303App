@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-const RoleBasedRoute = ({ children, allowedRoles }) => {
+const RoleBasedRoute = ({ children, allowedRoles, requireRestricted = false }) => {
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -17,26 +17,29 @@ const RoleBasedRoute = ({ children, allowedRoles }) => {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
                     withCredentials: true
                 });
-
                 const userRole = response.data.user.role;
-
-                if (!allowedRoles.includes(userRole)) {
+                const restricted = response.data.user.restricted;
+                
+                
+                if (!allowedRoles.includes(userRole) || (requireRestricted && !restricted)) {
                     console.log('Unauthorized access attempt');
-                    router.push('/unauthorized'); // Create this page
+                    console.log('restricted', restricted);
+                    console.log("requireRestricted", requireRestricted);
+                     // Create this page
                     return;
                 }
 
                 setIsAuthorized(true);
             } catch (error) {
                 console.error('Auth check failed:', error);
-                router.push('/');
+                router.push('/unauthorized'); // Create this page
             } finally {
                 setLoading(false);
             }
         };
 
         checkAuth();
-    }, [router, allowedRoles]);
+    }, [router, allowedRoles, requireRestricted]);
 
     if (loading) {
         return <div>Loading...</div>; // Or your loading component

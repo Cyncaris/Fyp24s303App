@@ -6,7 +6,7 @@ import { ROLES } from '@/app/utils/roles'; // Import ROLES object // Import Role
 
 const PatientDashboard = () => {
   return (
-    <RoleBasedRoute allowedRoles={[ROLES.PATIENT]}> {/* Only allow Patient role */}
+    <RoleBasedRoute allowedRoles={[ROLES.PATIENT]} requireRestricted={false}> {/* Only allow Patient role */}
       <div className="bg-gray-100 min-h-screen flex flex-col">
         {/* Header Section */}
         <header className="bg-black text-white py-4 shadow-lg">
