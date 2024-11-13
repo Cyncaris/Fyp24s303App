@@ -1,13 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
 import axios from "axios";
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from "qrcode.react";
-
+import Pusher from 'pusher-js';
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object
+
+const initPusher = () => {
+  Pusher.logToConsole = false;
+  return new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+    encrypted: true,
+    channelAuthorization: {
+      endpoint: '/api/Pusher/auth',
+      transport: 'ajax',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  });
+};
+
 
 const Dashboard = () => {
 
@@ -15,23 +31,113 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true); 
   const [isQrModalVisible, setQrModalVisible] = useState(false);
   const router = useRouter();
+  const [qrData, setQrData] = useState('');
+  const [error, setError] = useState('');
+  const [destinationRoute, setDestinationRoute] = useState('');
+  const pusherRef = useRef(null);
+  const channelRef = useRef(null);
+
+  const getQRCode = async () => {
+    try {
+      const res = await axios.post('/api/qr-code');
+      console.log('QR response:', res.data); // Debug log
+      
+      if (res.data.success) {
+        const qr_url = `${res.data.data.sessionId}`;
+        setQrData(qr_url);
+        return qr_url;
+      } else {
+        throw new Error('Invalid response structure');
+      }
+    } catch (e) {
+      console.error('QR Code fetch error:', e);
+      setError('Failed to fetch QR Code. Please try again.');
+    }
+    return null;
+  };
+
+  // Function to handle QR code authentication completion
+  const handleQrAuthenticated = async (data) => {
+    try {
+      const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
+        userId: data.user_id,
+      }, {
+        withCredentials: true // Important for handling cookies
+      });
+
+      if (!tokenResponse.data.success) {
+        throw new Error('Failed to generate token');
+      }
+    }catch (tokenError) {
+      console.error('Token generation error:', tokenError);
+      setError('Failed to create session. Please try again.');
+    }
+    
+
+    setQrModalVisible(false);
+    if (destinationRoute === 'ManageAccount') {
+      router.push('/SysAdmin/ManageAccountDashboard');
+    } else if (destinationRoute === 'ManageRole') {
+      router.push('/SysAdmin/ManageRoleDashboard');
+    }
+  };
+
+  const setupPusherChannel = (channelData) => {
+    // Clean up existing connection
+
+    console.log('Channel Data:', channelData);
+    if (channelRef.current) {
+      channelRef.current.unbind_all();
+      channelRef.current.unsubscribe();
+    }
+
+    // Initialize Pusher if not already done
+    if (!pusherRef.current) {
+      pusherRef.current = initPusher();
+    }
+
+    // Subscribe to the channel
+    const channel = pusherRef.current.subscribe(`private-${channelData}`);
+    console.log('Subscribing to channel:', `private-${channelData}`);
+    channel.bind('pusher:subscription_succeeded', () => {
+      console.log('Successfully subscribed to channel');
+    });
+    channel.bind('pusher:subscription_error', (error) => {
+      console.error('Pusher subscription error:', error);
+      setError('Connection error. Please refresh.');
+    });
+    channel.bind('login-event', function (data) {
+      console.log('Received login event:', data);
+      handleQrAuthenticated(data);
+    });
+    channelRef.current = channel;
+  };
+
 
   // Function to handle clicking the link
-  const handleLinkClick = (event) => {
-    event.preventDefault(); // Prevent the default link behavior
-    setQrModalVisible(true); // Show the QR code modal
+  const handleLinkClick = async (route,event) => {
+    setDestinationRoute(route);
+    console.log('Destination Route:', route);
+    event.preventDefault();
+    setLoading(true);
+    const data = await getQRCode();
+    if (data) {
+      setupPusherChannel(data);
+    }
+    setQrModalVisible(true);
+    setLoading(false);
   };
 
   // Function to handle closing the modal
   const closeModal = () => {
+    if (channelRef.current) {
+      channelRef.current.unbind_all();
+      channelRef.current.unsubscribe();
+    }
+    if (pusherRef.current) {
+      pusherRef.current.disconnect();
+    }
     setQrModalVisible(false);
-  };
-
-  // Function to handle QR code authentication completion
-  const handleQrAuthenticated = () => {
-    setQrModalVisible(false);
-    // Programmatically navigate to the restricted page after successful authentication
-    router.push('/SysAdmin/ManageAccountDashboard');
   };
 
   const Logout = async () => {
@@ -123,7 +229,7 @@ const Dashboard = () => {
             <Link
               href="/SysAdmin/ManageAccountDashboard" // Path to the Manage Account page
               className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
-              onClick={handleLinkClick} // Handle the link click event
+              onClick={(e) => handleLinkClick('ManageAccount',e)} // Handle the link click event
             >
               <span className="font-bold text-lg">Manage Account</span>
               <i className="fas fa-user-cog text-2xl"></i>
@@ -140,7 +246,11 @@ const Dashboard = () => {
           </div>
         </div>
         {isQrModalVisible && (
-        <QrCodeModal closeModal={closeModal} onQrAuthenticated={handleQrAuthenticated} />
+        <QrCodeModal 
+          qrData={qrData} // Pass qrData as prop
+          error={error}   // Pass error as prop
+          loading={loading} // Pass loading as prop
+          closeModal={closeModal} />
       )}
       </main>
 
@@ -157,31 +267,37 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-const QrCodeModal = ({ closeModal, onQrAuthenticated }) => {
+const QrCodeModal = ({ qrData, error, loading, closeModal }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg relative">
         <h2 className="text-lg font-bold mb-4">Scan QR Code to Proceed</h2>
         
-        {/* QR Code Component */}
-        <QRCode value="https://your-backend.com/restricted-access?token=unique-token-here" className="mx-auto mb-4" />
+        {error && (
+          <div className="text-red-500 mb-4">
+            {error}
+          </div>
+        )}
 
-        {/* Simulated Authentication (for demonstration purposes) */}
-        <button
-          onClick={() => {
-            // Simulate successful QR authentication
-            alert('QR Code Scanned and Authenticated!');
-            onQrAuthenticated();
-          }}
-          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition mb-4"
-        >
-          Authenticate (Simulated)
-        </button>
+        {loading ? (
+          <div className="flex justify-center items-center mb-4">
+            <span>Loading QR code...</span>
+          </div>
+        ) : qrData ? (
+          <div className="mb-4">
+            <QRCodeSVG value={qrData} className="mx-auto" />
+          </div>
+        ) : (
+          <div className="text-gray-500 mb-4">
+            No QR code available
+          </div>
+        )}
+
 
         {/* Close Modal Button */}
         <button
           onClick={closeModal}
-          className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+          className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full"
         >
           Close
         </button>

@@ -5,9 +5,9 @@ import {
 import { Session } from '@supabase/supabase-js';
 import { useRef, useState } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { supabase } from '../lib/supabase';
 
 export default function QrScanner({ session }: { session: Session }) {
-    const qrLock = useRef(false);
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
 
@@ -34,32 +34,28 @@ export default function QrScanner({ session }: { session: Session }) {
         
         const channel = `${data}`;
         const user_id = session.user?.id;
-        if (channel.includes('login-')) {
-            try {
-                let resp = await fetch('http://192.168.50.13:3000/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        'channel': channel,
-                        'user_id': user_id, 
-                    }),
-                });
-                
-                if (resp.ok) {
-                    alert('Session authenticated!');
-                } else {
-                    alert('Session authentication failed!');
-                }
-            }catch (error) {
-                console.error('Error:', error);
+       
+        try {
+            let resp = await fetch(`http://192.168.50.13:3000/api/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'channel': channel,
+                    'user_id': user_id, 
+                }),
+            });
+            
+            if (resp.ok) {
+                alert('Session authenticated!');
+            } else {
+                alert('Session authentication failed!');
             }
+        }catch (error) {
+            console.error('Error:', error);
         }
-        else if (channel.includes('restricted-')) {
-            const token = channel.split('restricted-')[1];
-        }
-        
+    
         // fetch need to be on same network aka same wifi
         
     };
@@ -93,7 +89,7 @@ export default function QrScanner({ session }: { session: Session }) {
             <Pressable
                 style={styles.logoutButton}
                 disabled={!isPermissionGranted}
-                onPress={requestPermission}
+                
             >
                 <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>

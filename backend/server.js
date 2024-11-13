@@ -135,7 +135,60 @@ app.post('/api/gen-token', async (req, res) => {
     }
 });
 
+app.post('/api/update-token', async (req, res) => {
+    // Get the current token from cookies
+    const currentToken = req.cookies.authToken;
+    
+    if (!currentToken) {
+        return res.status(401).json({
+            success: false,
+            message: 'No token provided'
+        });
+    }
 
+    try {
+        // Verify and decode the current token
+        const decoded = jwt.verify(currentToken, secretKey);
+        
+        // Create new payload with all existing data plus restricted flag
+        const newPayload = {
+            ...decoded,
+            restricted: true,
+            iat: Math.floor(Date.now() / 1000) // Update issued at time
+        };
+        
+        // Remove the exp field if it exists, as jwt.sign will add a new one
+        delete newPayload.exp;
+        
+        // Generate new token
+        const newToken = jwt.sign(newPayload, secretKey, {
+            expiresIn: '1h'
+        });
+
+        // Set the new cookie
+        res.cookie('authToken', newToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 3600000,
+            path: '/',
+            domain: process.env.NODE_ENV === 'production' ? 'yoursite.com' : 'localhost'
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Token updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Token update error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error updating token',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
+    }
+});
 
 async function getUserById(user_id) {
     if (!user_id) {
@@ -174,7 +227,7 @@ async function verifySessionId(channel) {
             };
         }
 
-        const session_id = channel.split('login-')[1];  // Extract session ID from channel name
+        const session_id = channel;  // Extract session ID from channel name
 
         const { data: sessionData, error: sessionError } = await supabase
             .from('qr_sessions')

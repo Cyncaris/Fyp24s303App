@@ -32,12 +32,10 @@ export default function Login() {
   const getQRCode = async () => {
     try {
       const res = await axios.post('/api/qr-code');
-      console.log('QR Code API Response:', res);
-      console.log('QR Code API Response Data:', res.data.data.sessionId);
       if (res.data.success) {
-        const qr_url = `login-${res.data.data.sessionId}`;
+        const qr_url = `${res.data.data.sessionId}`;
         setQrData(qr_url);
-        console.log('QR Data Set:', qr_url);
+     
         return qr_url;
       } else {
         throw new Error('Invalid response structure');
@@ -54,25 +52,6 @@ export default function Login() {
     console.log('Received login data:', data.token);
     console.log('Received user data:', data.user_id);
 
-    // try {
-    //   // if (!data?.channel) {
-    //   //   throw new Error('Invalid login data');
-    //   // }
-
-    //   // Validate the QR code session before logging in
-    //   const isValidSession = await validateQRCode(data.token);
-    //   if (!isValidSession) {
-    //     console.warn("Session validation failed. Please refresh the QR code.");
-    //     return;
-    //   }
-    // } catch (error) {
-    //   console.error('Login error:', error);
-    //   setError('Login failed. Please try again.');
-    //   return;
-    // }
-    // const user = await axios.get('/api/get-user', { params: { user_id: data.user_id } });
-    // console.log('User data:', user.data.data.name);
-    // console.log
 
     try {
       const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
@@ -93,9 +72,10 @@ export default function Login() {
       //   role: user.data.data.role_id
       // }));
 
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-token`, {
         withCredentials: true
       });
+      console.log('User data:', response);
 
       const userRole = response.data.user.role;
       switch (userRole) {
