@@ -19,13 +19,10 @@ const RoleBasedRoute = ({ children, allowedRoles, requireRestricted = false }) =
                 });
                 const userRole = response.data.user.role;
                 const restricted = response.data.user.restricted;
-                
-                
+              
                 if (!allowedRoles.includes(userRole) || (requireRestricted && !restricted)) {
                     console.log('Unauthorized access attempt');
-                    console.log('restricted', restricted);
-                    console.log("requireRestricted", requireRestricted);
-                     // Create this page
+                    router.push('/unauthorized'); // Create this page
                     return;
                 }
 

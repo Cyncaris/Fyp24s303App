@@ -16,7 +16,5 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Add debug logging for supabase client
-console.log('Supabase client methods:', Object.keys(supabase));
 
 module.exports = { supabase };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link"; // Use Next.js Link for navigation
 import axios from "axios";
 import { useRouter } from 'next/navigation';
@@ -24,11 +24,10 @@ const initPusher = () => {
   });
 };
 
-
 const Dashboard = () => {
 
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [isQrModalVisible, setQrModalVisible] = useState(false);
   const router = useRouter();
   const [qrData, setQrData] = useState('');
@@ -41,7 +40,7 @@ const Dashboard = () => {
     try {
       const res = await axios.post('/api/qr-code');
       console.log('QR response:', res.data); // Debug log
-      
+
       if (res.data.success) {
         const qr_url = `${res.data.data.sessionId}`;
         setQrData(qr_url);
@@ -68,7 +67,7 @@ const Dashboard = () => {
       if (!tokeUpdate.data.success) {
         throw new Error('Failed to generate token');
       }
-    }catch (tokenError) {
+    } catch (tokenError) {
       console.error('Token generation error:', tokenError);
       setError('Failed to create session. Please try again.');
     }
@@ -121,7 +120,7 @@ const Dashboard = () => {
 
 
   // Function to handle clicking the link
-  const handleLinkClick = async (route,event) => {
+  const handleLinkClick = async (route, event) => {
     setDestinationRoute(route);
     console.log('Destination Route:', route);
     event.preventDefault();
@@ -166,32 +165,38 @@ const Dashboard = () => {
 
 
   useEffect(() => {
+    if (document.cookie.indexOf('authToken') === -1) {
+      router.push('/unauthorized');
+      return;
+    }
     const fetchUserProfile = async () => {
       try {
+        // Use the NEXT_PUBLIC_BACKEND_URL instead of relative path
         const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
           withCredentials: true
         });
-        if (response.status !== 200) {
-          console.log("response", response);  
-          throw new Error('Failed to fetch user profile');
-        }
-        
-        const data = response.data;
-        
-        if (data.success) {
-          const userProfile = {
-            username: data.user.username,
-            role: data.user.role
-          };
-          
-          setUser(userProfile);
-          // Only redirect to home if you really need to
-          // router.push('/') // Remove this if you want to stay on current page
-        } else {
+
+        if (!response.data.success) {
           throw new Error('Verification failed');
         }
+
+        const data = response.data;
+        const userProfile = {
+          username: data.user.username,
+          role: data.user.role
+        };
+
+        console.log('User Profile:', userProfile); // Debug log
+        setUser(userProfile);
+
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        if (error.response.status === 401) {
+          // Clear auth state
+          setUser(null);
+          router.push('/unauthorized');
+        }
+
+        // Clear auth state
         setUser(null);
         document.cookie = 'authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         router.push('/unauthorized');
@@ -201,7 +206,7 @@ const Dashboard = () => {
     };
 
     fetchUserProfile();
-  }, []);
+  }, [router]);
 
   if (loading) {
     return (
@@ -241,7 +246,7 @@ const Dashboard = () => {
               <Link
                 href="/SysAdmin/ManageAccountDashboard" // Path to the Manage Account page
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
-                onClick={(e) => handleLinkClick('ManageAccount',e)} // Handle the link click event
+                onClick={(e) => handleLinkClick('ManageAccount', e)} // Handle the link click event
               >
                 <span className="font-bold text-lg">Manage Account</span>
                 <i className="fas fa-user-cog text-2xl"></i>
@@ -251,7 +256,7 @@ const Dashboard = () => {
               <a
                 href="/SysAdmin/ManageRoleDashboard" // Placeholder link, replace with actual URL if available
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
-                onClick={(e) => handleLinkClick('ManageRole',e)}
+                onClick={(e) => handleLinkClick('ManageRole', e)}
               >
                 <span className="font-bold text-lg">Manage Role</span>
                 <i className="fas fa-users-cog text-2xl"></i>
@@ -259,12 +264,12 @@ const Dashboard = () => {
             </div>
           </div>
           {isQrModalVisible && (
-          <QrCodeModal 
-            qrData={qrData} // Pass qrData as prop
-            error={error}   // Pass error as prop
-            loading={loading} // Pass loading as prop
-            closeModal={closeModal} />
-        )}
+            <QrCodeModal
+              qrData={qrData} // Pass qrData as prop
+              error={error}   // Pass error as prop
+              loading={loading} // Pass loading as prop
+              closeModal={closeModal} />
+          )}
         </main>
 
         {/* Footer Section */}
@@ -285,7 +290,7 @@ const QrCodeModal = ({ qrData, error, loading, closeModal }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg relative">
         <h2 className="text-lg font-bold mb-4">Scan QR Code to Proceed</h2>
-        
+
         {error && (
           <div className="text-red-500 mb-4">
             {error}
