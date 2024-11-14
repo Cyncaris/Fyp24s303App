@@ -60,20 +60,15 @@ export default function QrScanner({ session }: { session: Session }) {
         
     };
 
-    // const onScanned = async (sessionId) => {
-    //     // Perform authentication, e.g., biometrics
-    //     const isAuthenticated = await performBiometricAuthentication();
-    //     if (isAuthenticated) {
-    //       // Send authenticated session ID to backend
-    //       await fetch('http://localhost:3000/api/authenticate-session', {
-    //         method: 'POST',
-    //         headers: {
-    //           'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({ sessionId }),
-    //       });
-    //     }
-    //   };
+    const handleLogout = async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error signing out:', error);
+            alert('Error signing out!');
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -89,7 +84,7 @@ export default function QrScanner({ session }: { session: Session }) {
             <Pressable
                 style={styles.logoutButton}
                 disabled={!isPermissionGranted}
-                
+                onPress={handleLogout}
             >
                 <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>
