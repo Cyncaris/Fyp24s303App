@@ -1,5 +1,4 @@
 import Pusher from 'pusher';
-import { sessions } from './generate-QR';
 
 const pusher = new Pusher({
     appId: process.env.PUSHER_APP_ID,
