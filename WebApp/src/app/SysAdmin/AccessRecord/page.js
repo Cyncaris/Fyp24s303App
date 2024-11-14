@@ -4,11 +4,38 @@ import Link from "next/link"; // Next.js Link for navigation
 import { supabase } from "@/app/lib/supabaseClient";
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object // Ensure the correct path for Supabase client
+import { useRouter } from "next/navigation";
 
 const AccessRecord = () => {
     const [records, setRecords] = useState([]); // Store fetched records
     const [searchTerm, setSearchTerm] = useState("");
     const [error, setError] = useState("");
+    const router = useRouter();
+
+  // Function to clear all cookies
+const clearCookies = () => {
+    const cookies = document.cookie.split(";"); // Get all cookies
+    cookies.forEach((cookie) => {
+    const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`; // Overwrite with an expired date
+    });
+};
+
+  // Logout Function
+const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut(); // End the session
+    if (error) {
+        setError("Failed to log out: " + error.message);
+        return;
+    }
+      clearCookies(); // Clear cookies after signing out
+      router.push("/"); // Redirect to the login page
+    } catch (err) {
+    setError("An unexpected error occurred during logout: " + err.message);
+    }
+};
+
 
   // Fetch access records from Supabase
 useEffect(() => {
@@ -16,9 +43,9 @@ useEffect(() => {
         try {
         const { data, error } = await supabase
           .from("useraccount") // Replace with your actual table name
-          .select("id, email, first_name, last_name, is_active, created_at");
+            .select("id, email, first_name, last_name, is_active, created_at");
         if (error) {
-          throw error;
+            throw error;
         }
         setRecords(data); // Set the records retrieved from Supabase
         } catch (err) {
@@ -84,9 +111,9 @@ return (
                     </Link>
                 </li>
                 <li>
-                    <Link href="/app" className="hover:underline">
+                <button onClick={handleLogout} className="hover:underline">
                     Logout
-                    </Link>
+                </button>
                 </li>
                 </ul>
             </nav>

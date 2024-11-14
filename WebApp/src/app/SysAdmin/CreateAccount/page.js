@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link'; // Adjust the Link path if necessary
 import { supabase } from '@/app/lib/supabaseClient';
 import crypto from 'crypto'; // For encryption
+import { useRouter } from "next/navigation";
 
 const CreateAccount = () => {
   // State variables for form fields
@@ -13,6 +14,32 @@ const CreateAccount = () => {
   const [role, setRole] = useState('SysAdmin'); // Default to 'SysAdmin'
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const router = useRouter();
+
+  // Function to clear all cookies
+  const clearCookies = () => {
+    const cookies = document.cookie.split(";"); // Get all cookies
+    cookies.forEach((cookie) => {
+      const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`; // Overwrite with an expired date
+    });
+  };
+
+  // Logout Function
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut(); // End the session
+      if (error) {
+        setError("Failed to log out: " + error.message);
+        return;
+      }
+      clearCookies(); // Clear cookies after signing out
+      router.push("/"); // Redirect to the login page
+    } catch (err) {
+      setError("An unexpected error occurred during logout: " + err.message);
+    }
+  };
+
   
   // Function to generate a random QR secret key
   const generateQrSecretKey = () => {
@@ -30,11 +57,11 @@ const CreateAccount = () => {
   // Determine the role_id based on the selected role
   const getRoleId = (role) => {
     switch (role) {
-      case 'SysAdmin':
-        return 1;
       case 'Doctor':
-        return 2;
+        return 1;
       case 'Patient':
+        return 2;
+      case 'SysAdmin':
         return 3;
       default:
         return 3; // Default to 'Patient' if none selected
@@ -90,8 +117,10 @@ const CreateAccount = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/app" className="hover:underline">Logout</Link>
-              </li>
+                  <button onClick={handleLogout} className="hover:underline">
+                    Logout
+                  </button>
+                </li>
             </ul>
           </nav>
         </div>

@@ -5,6 +5,8 @@
   import Pusher from 'pusher-js';
   import axios from "axios";
   import { useRouter } from 'next/navigation';
+  import Link from 'next/link'; 
+
 
   const initPusher = () => {
     Pusher.logToConsole = false;
@@ -200,6 +202,13 @@
             >
               {isLoading ? 'Refreshing...' : 'Refresh QR Code'}
             </button>
+
+            {/* Register Button */}
+          <Link href="/register">
+            <button className="px-4 py-2 mt-4 bg-green-500 text-white rounded hover:bg-green-600">
+              Register
+            </button>
+            </Link>
           </div>
         </div>
       </div>
