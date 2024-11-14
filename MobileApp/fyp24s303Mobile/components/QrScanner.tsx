@@ -1,15 +1,74 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import {
-    View, Text, StyleSheet, SafeAreaView, Pressable, Platform, StatusBar,
+    View, Text, StyleSheet, SafeAreaView, Pressable, Button, StatusBar,
 } from "react-native";
 import { Session } from '@supabase/supabase-js';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { supabase } from '../lib/supabase';
 
 export default function QrScanner({ session }: { session: Session }) {
-    const qrLock = useRef(false);
     const [permission, requestPermission] = useCameraPermissions();
+    const [scanned, setScanned] = useState(false);
 
     const isPermissionGranted = Boolean(permission?.granted);
+
+    const handleBarCodeScanned = async ({data }: { data: string }) => {
+        setScanned(true);
+        
+        try{
+            const isAuthenticated = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Authenticate with Biometrics',
+                fallbackLabel: 'Enter Passcode',
+            });
+    
+            if (!isAuthenticated.success) {
+                alert('Authentication failed!');
+                supabase.auth.signOut();
+                return;
+            }
+        }
+        catch (error) {
+            console.error('Error:', error);
+        }
+        
+        const channel = `${data}`;
+        const user_id = session.user?.id;
+       
+        try {
+            let resp = await fetch(`http://192.168.136.38:3000/api/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    'channel': channel,
+                    'user_id': user_id, 
+                }),
+            });
+            
+            if (resp.ok) {
+                alert('Session authenticated!');
+            } else {
+                alert('Session authentication failed!');
+            }
+        }catch (error) {
+            console.error('Error:', error);
+        }
+    
+        // fetch need to be on same network aka same wifi
+        
+    };
+
+    const handleLogout = async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error signing out:', error);
+            alert('Error signing out!');
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -18,16 +77,14 @@ export default function QrScanner({ session }: { session: Session }) {
                 <CameraView
                     style={styles.camera}
                     facing="back"
-                    onBarcodeScanned={({ data }) => {
-                        console.log('onBarcodeScanned');
-                        console.log(data);
-                    }}
+                    onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
                 />
             </View>
+            {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
             <Pressable
                 style={styles.logoutButton}
                 disabled={!isPermissionGranted}
-                onPress={requestPermission}
+                onPress={handleLogout}
             >
                 <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>

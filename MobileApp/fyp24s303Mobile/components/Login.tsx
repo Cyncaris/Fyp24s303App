@@ -1,21 +1,58 @@
-import React, { useState } from 'react';
+// Auth.tsx
+import React, { useState, useEffect } from 'react';
 import { Alert, StyleSheet, View, AppState } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { supabase } from '../lib/supabase';
 import { Button, Input } from '@rneui/themed';
 
-AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-        supabase.auth.startAutoRefresh();
-    } else {
-        supabase.auth.stopAutoRefresh();
-    }
-});
+const SESSION_TIMEOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 
 export default function Auth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    let sessionTimeout: NodeJS.Timeout;
+
+    useEffect(() => {
+        // Clear timeout on component unmount
+        return () => clearTimeout(sessionTimeout);
+    }, []);
+
+    const resetSessionTimeout = () => {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = setTimeout(async () => {
+            await supabase.auth.signOut();
+            Alert.alert('Session Expired', 'Please log in again.');
+        }, SESSION_TIMEOUT_DURATION);
+    };
+
+    // Handle app state changes
+    useEffect(() => {
+        let lastActiveTimestamp = Date.now();
+
+        const subscription = AppState.addEventListener('change', async (state) => {
+            if (state === 'active') {
+                const currentTime = Date.now();
+                const inactiveTime = currentTime - lastActiveTimestamp;
+
+                if (inactiveTime >= SESSION_TIMEOUT_DURATION) {
+                    await supabase.auth.signOut();
+                    Alert.alert('Session Expired', 'Please log in again.');
+                } else {
+                    resetSessionTimeout();
+                    supabase.auth.startAutoRefresh();
+                }
+            } else {
+                lastActiveTimestamp = Date.now();
+                supabase.auth.stopAutoRefresh();
+            }
+        });
+
+        return () => {
+            subscription.remove();
+            clearTimeout(sessionTimeout);
+        };
+    }, []);
 
     async function signInWithEmail() {
         setLoading(true);
@@ -38,6 +75,9 @@ export default function Auth() {
         } else {
             authenticateWithBiometrics();
         }
+        
+        // Start session timeout on successful login
+        resetSessionTimeout();
         setLoading(false);
     }
 
@@ -59,7 +99,9 @@ export default function Auth() {
             if (result.success) {
                 Alert.alert('Authentication successful!');
                 console.log("Login successful, navigating to QrScanner.");
+                resetSessionTimeout(); // Reset timeout after successful biometric auth
             } else {
+                supabase.auth.signOut();
                 Alert.alert('Biometric authentication failed.');
             }
         } catch (error) {
@@ -67,6 +109,7 @@ export default function Auth() {
         }
     }
 
+    // Rest of your component remains the same...
     return (
         <View style={styles.container}>
             <View style={styles.inputContainer}>
@@ -109,6 +152,7 @@ export default function Auth() {
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
