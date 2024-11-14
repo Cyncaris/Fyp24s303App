@@ -39,7 +39,6 @@ const Dashboard = () => {
   const getQRCode = async () => {
     try {
       const res = await axios.post('/api/qr-code');
-      console.log('QR response:', res.data); // Debug log
 
       if (res.data.success) {
         const qr_url = `${res.data.data.sessionId}`;
@@ -78,6 +77,7 @@ const Dashboard = () => {
     if (response.status !== 200) {
       throw new Error('Failed to verify token');
     } else {
+      console.log('destinationRoute:', destinationRoute);
       setQrModalVisible(false);
       if (destinationRoute === 'ManageAccount') {
         router.push('/SysAdmin/ManageAccountDashboard');
@@ -89,8 +89,7 @@ const Dashboard = () => {
 
   const setupPusherChannel = (channelData) => {
     // Clean up existing connection
-
-    console.log('Channel Data:', channelData);
+;
     if (channelRef.current) {
       channelRef.current.unbind_all();
       channelRef.current.unsubscribe();
@@ -103,16 +102,15 @@ const Dashboard = () => {
 
     // Subscribe to the channel
     const channel = pusherRef.current.subscribe(`private-${channelData}`);
-    console.log('Subscribing to channel:', `private-${channelData}`);
+
     channel.bind('pusher:subscription_succeeded', () => {
-      console.log('Successfully subscribed to channel');
+
     });
     channel.bind('pusher:subscription_error', (error) => {
       console.error('Pusher subscription error:', error);
       setError('Connection error. Please refresh.');
     });
     channel.bind('login-event', function (data) {
-      console.log('Received login event:', data);
       handleQrAuthenticated(data);
     });
     channelRef.current = channel;
@@ -122,7 +120,6 @@ const Dashboard = () => {
   // Function to handle clicking the link
   const handleLinkClick = async (route, event) => {
     setDestinationRoute(route);
-    console.log('Destination Route:', route);
     event.preventDefault();
     setLoading(true);
     const data = await getQRCode();
@@ -165,16 +162,17 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    if (document.cookie.indexOf('authToken') === -1) {
-      router.push('/unauthorized');
-      return;
-    }
+   
     const fetchUserProfile = async () => {
       try {
         // Use the NEXT_PUBLIC_BACKEND_URL instead of relative path
         const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
           withCredentials: true
         });
+        if (response.status == 401) {
+          router.push('/unauthorized');
+          return;
+        }
 
         if (!response.data.success) {
           throw new Error('Verification failed');
@@ -186,7 +184,6 @@ const Dashboard = () => {
           role: data.user.role
         };
 
-        console.log('User Profile:', userProfile); // Debug log
         setUser(userProfile);
 
       } catch (error) {
