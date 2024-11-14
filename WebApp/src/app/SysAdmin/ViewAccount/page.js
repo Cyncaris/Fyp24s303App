@@ -4,6 +4,8 @@ import Link from "next/link"; // Next.js Link for navigation
 import { supabase } from '@/app/lib/supabaseClient'; // Ensure this path matches your Supabase client setup
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
+import { useRouter } from "next/navigation";
+
 
 const ViewAccount = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,6 +15,32 @@ const ViewAccount = () => {
   const [users, setUsers] = useState([]); 
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const router = useRouter();
+
+  // Function to clear all cookies
+  const clearCookies = () => {
+    const cookies = document.cookie.split(";"); // Get all cookies
+    cookies.forEach((cookie) => {
+      const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`; // Overwrite with an expired date
+    });
+  };
+
+  // Logout Function
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut(); // End the session
+      if (error) {
+        setError("Failed to log out: " + error.message);
+        return;
+      }
+      clearCookies(); // Clear cookies after signing out
+      router.push("/"); // Redirect to the login page
+    } catch (err) {
+      setError("An unexpected error occurred during logout: " + err.message);
+    }
+  };
+
 
   // Fetch users from Supabase on component mount
   useEffect(() => {
@@ -111,7 +139,9 @@ const ViewAccount = () => {
                   <Link href="/SysAdmin/MainDashboard" className="hover:underline">Home</Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:underline">Logout</Link>
+                  <button onClick={handleLogout} className="hover:underline">
+                    Logout
+                  </button>
                 </li>
               </ul>
             </nav>

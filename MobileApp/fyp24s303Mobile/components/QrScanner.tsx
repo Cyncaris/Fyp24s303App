@@ -36,7 +36,7 @@ export default function QrScanner({ session }: { session: Session }) {
         const user_id = session.user?.id;
        
         try {
-            let resp = await fetch(`http://192.168.50.13:3000/api/login`, {
+            let resp = await fetch(`http://192.168.136.38:3000/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

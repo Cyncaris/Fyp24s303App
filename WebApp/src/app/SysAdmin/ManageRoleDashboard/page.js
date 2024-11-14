@@ -4,6 +4,10 @@ import Link from "next/link"; // Next.js Link for navigation
 import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path to your Supabase client
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
+import { useRouter } from "next/navigation";
+
+
+
 
 const ManageRoleDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,6 +16,33 @@ const ManageRoleDashboard = () => {
   const [newRole, setNewRole] = useState(""); // To store the updated role
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const router = useRouter();
+
+  // Function to clear all cookies
+  const clearCookies = () => {
+    const cookies = document.cookie.split(";"); // Get all cookies
+    cookies.forEach((cookie) => {
+      const name = cookie.split("=")[0].trim();
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`; // Overwrite with an expired date
+    });
+  };
+
+  // Logout Function
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut(); // End the session
+      if (error) {
+        setError("Failed to log out: " + error.message);
+        return;
+      }
+      clearCookies(); // Clear cookies after signing out
+      router.push("/"); // Redirect to the login page
+    } catch (err) {
+      setError("An unexpected error occurred during logout: " + err.message);
+    }
+  };
+
+
 
   // Role mapping function
   const mapRoleIdToRole = (role_id) => {
@@ -26,6 +57,7 @@ const ManageRoleDashboard = () => {
         return "Unknown";
     }
   };
+
 
   // Reverse role mapping for updates (convert role names back to ID)
   const mapRoleToRoleId = (role) => {
@@ -125,7 +157,7 @@ const ManageRoleDashboard = () => {
         {/* Header Section */}
         <header className="bg-blue-600 text-white py-4 shadow-lg">
           <div className="container mx-auto px-4 flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Edit Account</h1>
+            <h1 className="text-2xl font-bold">Role Management</h1>
             <nav>
               <ul className="flex space-x-4">
                 <li>
@@ -134,14 +166,14 @@ const ManageRoleDashboard = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/app" className="hover:underline">
+                  <Link href="/SysAdmin/MainDashboard" className="hover:underline">
                     Home
                   </Link>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <button onClick={handleLogout} className="hover:underline">
                     Logout
-                  </a>
+                  </button>
                 </li>
               </ul>
             </nav>
@@ -150,7 +182,7 @@ const ManageRoleDashboard = () => {
 
         {/* Main Content Section */}
         <main className="flex-grow container mx-auto px-4 py-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Role Management</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Search User</h2>
 
           {/* Search Box */}
           <div className="mb-4">
