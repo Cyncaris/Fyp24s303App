@@ -1,9 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object // Import RoleBasedRoute component
 
 export default function Home() {
   return (
+    <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={false}>
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-white text-gray-800 py-4 shadow-lg">
@@ -43,5 +46,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </RoleBasedRoute>
   );
 }
