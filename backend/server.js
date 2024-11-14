@@ -139,7 +139,7 @@ app.post('/api/gen-token', async (req, res) => {
 app.post('/api/update-token', async (req, res) => {
     // Get the current token from cookies
     const currentToken = req.cookies.authToken;
-    
+    console.log("update token")
     if (!currentToken) {
         return res.status(401).json({
             success: false,

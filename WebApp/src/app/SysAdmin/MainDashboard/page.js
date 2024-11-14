@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from "react";
-import Link from "next/link"; // Use Next.js Link for navigation
 import axios from "axios";
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from "qrcode.react";
@@ -35,6 +34,7 @@ const Dashboard = () => {
   const [destinationRoute, setDestinationRoute] = useState('');
   const pusherRef = useRef(null);
   const channelRef = useRef(null);
+  const routeRef = useRef(null);
 
   const getQRCode = async () => {
     try {
@@ -56,7 +56,9 @@ const Dashboard = () => {
 
   // Function to handle QR code authentication completion
   const handleQrAuthenticated = async (data) => {
+    const currentRoute = routeRef.current;
     try {
+    
       const tokeUpdate = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-token`, {
         userId: data.user_id,
       }, {
@@ -77,11 +79,11 @@ const Dashboard = () => {
     if (response.status !== 200) {
       throw new Error('Failed to verify token');
     } else {
-      console.log('destinationRoute:', destinationRoute);
+      console.log('destinationRoute:', currentRoute);
       setQrModalVisible(false);
-      if (destinationRoute) {
-        console.log('Navigating to:', destinationRoute);
-        switch (destinationRoute) {
+      if (currentRoute) {
+        console.log('Navigating to:', currentRoute);
+        switch (currentRoute) {
           case 'ManageAccount':
             router.push('/SysAdmin/ManageAccountDashboard');
             break;
@@ -89,7 +91,7 @@ const Dashboard = () => {
             router.push('/SysAdmin/ManageRoleDashboard');
             break;
           default:
-            console.error('Unknown destination route:', destinationRoute);
+            console.error('Unknown destination route:', currentRoute);
         }
       } else {
         console.error('No destination route specified');
@@ -129,8 +131,11 @@ const Dashboard = () => {
 
   // Function to handle clicking the link
   const handleLinkClick = async (route, event) => {
-    setDestinationRoute(route);
     event.preventDefault();
+    setDestinationRoute(route);
+    routeRef.current = route;
+    console.log('Setting destination route to:', route);
+
     setLoading(true);
     const data = await getQRCode();
     if (data) {
