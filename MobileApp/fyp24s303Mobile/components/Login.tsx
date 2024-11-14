@@ -5,7 +5,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { supabase } from '../lib/supabase';
 import { Button, Input } from '@rneui/themed';
 
-const SESSION_TIMEOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+const SESSION_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 export default function Auth() {
     const [email, setEmail] = useState('');
