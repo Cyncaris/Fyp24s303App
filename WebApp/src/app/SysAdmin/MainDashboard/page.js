@@ -31,10 +31,8 @@ const Dashboard = () => {
   const router = useRouter();
   const [qrData, setQrData] = useState('');
   const [error, setError] = useState('');
-  const [destinationRoute, setDestinationRoute] = useState('');
   const pusherRef = useRef(null);
   const channelRef = useRef(null);
-  const routeRef = useRef(null);
 
   const getQRCode = async () => {
     try {
@@ -55,8 +53,8 @@ const Dashboard = () => {
   };
 
   // Function to handle QR code authentication completion
-  const handleQrAuthenticated = async (data) => {
-    const currentRoute = routeRef.current;
+  const handleQrAuthenticated = async (data,route) => {
+    const currentRoute = route;
     try {
     
       const tokeUpdate = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-token`, {
@@ -99,7 +97,7 @@ const Dashboard = () => {
     }
   };
 
-  const setupPusherChannel = (channelData) => {
+  const setupPusherChannel = (channelData,route) => {
     // Clean up existing connection
 ;
     if (channelRef.current) {
@@ -123,7 +121,7 @@ const Dashboard = () => {
       setError('Connection error. Please refresh.');
     });
     channel.bind('login-event', function (data) {
-      handleQrAuthenticated(data);
+      handleQrAuthenticated(data,route);
     });
     channelRef.current = channel;
   };
@@ -132,14 +130,12 @@ const Dashboard = () => {
   // Function to handle clicking the link
   const handleLinkClick = async (route, event) => {
     event.preventDefault();
-    setDestinationRoute(route);
-    routeRef.current = route;
-    console.log('Setting destination route to:', route);
+
 
     setLoading(true);
     const data = await getQRCode();
     if (data) {
-      setupPusherChannel(data);
+      setupPusherChannel(data,route);
     }
     setQrModalVisible(true);
     setLoading(false);
