@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link"; // Next.js Link for navigation
-import { supabase } from "@/app/lib/supabaseClient"; // Ensure the correct path for Supabase client
+import { supabase } from "@/app/lib/supabaseClient";
+import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object // Ensure the correct path for Supabase client
 
 const AccessRecord = () => {
     const [records, setRecords] = useState([]); // Store fetched records
@@ -32,13 +34,14 @@ const handleSearch = (e) => {
 };
 
   // Filter records based on search term
-const filteredRecords = records.filter(
-    (record) =>
-    record.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.email.toLowerCase().includes(searchTerm.toLowerCase())
-);
-
+  const filteredRecords = records.filter((record) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+        (record.first_name?.toLowerCase() || "").includes(searchTermLower) ||
+        (record.last_name?.toLowerCase() || "").includes(searchTermLower) ||
+        (record.email?.toLowerCase() || "").includes(searchTermLower)
+    );
+});
   // Handle suspend account
 const handleSuspend = async (userId) => {
     try {
@@ -63,99 +66,104 @@ const handleSuspend = async (userId) => {
 };
 
 return (
-    <div className="bg-gray-100 min-h-screen flex flex-col">
-      {/* Header Section */}
-    <header className="bg-blue-600 text-white py-4 shadow-lg">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Access Record</h1>
-        <nav>
-            <ul className="flex space-x-4">
-              {/* Navigation Links */}
-            <li>
-                <Link href="/SysAdmin/MainDashboard" className="hover:underline">
-                Home
-                </Link>
-            </li>
-            <li>
-                <Link href="/app" className="hover:underline">
-                Logout
-                </Link>
-            </li>
-            </ul>
-        </nav>
-        </div>
-    </header>
+    <RoleBasedRoute allowedRoles={[ROLES.ADMIN]} requireRestricted={true}>
+        <div className="bg-gray-100 min-h-screen flex flex-col">
+        {/* Header Section */}
+        <header className="bg-blue-600 text-white py-4 shadow-lg">
+            <div className="container mx-auto px-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Access Record</h1>
+            <nav>
+                <ul className="flex space-x-4">
+                {/* Navigation Links */}
+                <li>
+                    <a href="/SysAdmin/ManageAccountDashboard">Back</a>
+                </li>
+                <li>
+                    <Link href="/SysAdmin/MainDashboard" className="hover:underline">
+                    Home
+                    </Link>
+                </li>
+                <li>
+                    <Link href="/app" className="hover:underline">
+                    Logout
+                    </Link>
+                </li>
+                </ul>
+            </nav>
+            </div>
+        </header>
 
-      {/* Main Content Section */}
-    <main className="flex-grow container mx-auto px-4 py-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Account Management</h2>
+        {/* Main Content Section */}
+        <main className="flex-grow container mx-auto px-4 py-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Account Management</h2>
 
-        {/* Search Box */}
-        <div className="mb-4">
-        <input
-            type="text"
-            className="w-full p-2 border border-gray-800 rounded-lg"
-            placeholder="Search by first name, last name, or email"
-            value={searchTerm}
-            onChange={handleSearch}
-        />
-        </div>
+            {/* Search Box */}
+            <div className="mb-4">
+            <input
+                type="text"
+                className="w-full p-2 border border-gray-800 rounded-lg"
+                placeholder="Search by first name, last name, or email"
+                value={searchTerm}
+                onChange={handleSearch}
+            />
+            </div>
 
-        {/* Table of Records */}
-        <table className="w-full table-auto bg-white shadow-md rounded-lg">
-        <thead className="border border-black">
-            <tr className="bg-white text-gray-800">
-            <th className="px-4 py-2">Record ID</th>
-            <th className="px-4 py-2">First Name</th>
-            <th className="px-4 py-2">Last Name</th>
-            <th className="px-4 py-2">Email</th>
-            <th className="px-4 py-2">Active</th>
-            <th className="px-4 py-2">Created At</th>
-            <th className="px-4 py-2">Actions</th> {/* Add Actions column */}
-            </tr>
-        </thead>
-        <tbody>
-            {filteredRecords.length > 0 ? (
-            filteredRecords.map((record) => (
-                <tr key={record.id} className="hover:bg-gray-700 text-gray-900">
-                <td className="border border-gray-900 px-4 py-2">{record.id}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.first_name}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.last_name}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.email}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.is_active ? "Yes" : "No"}</td>
-                <td className="border border-gray-900 px-4 py-2">{record.created_at}</td>
-                <td className="border border-gray-900 px-4 py-2">
-                    {/* Suspend Account Button */}
-                    {record.is_active && (
-                    <button
-                        className="bg-red-500 text-white px-4 py-2 rounded"
-                        onClick={() => handleSuspend(record.id)}
-                    >
-                        Suspend Account
-                    </button>
-                    )}
-                </td>
+            {/* Table of Records */}
+            <table className="w-full table-auto bg-white shadow-md rounded-lg">
+            <thead className="border border-black">
+                <tr className="bg-white text-gray-800">
+                    <th className="px-4 py-2">Record ID</th>
+                    <th className="px-4 py-2">First Name</th>
+                    <th className="px-4 py-2">Last Name</th>
+                    <th className="px-4 py-2">Email</th>
+                    <th className="px-4 py-2">Active</th>
+                    <th className="px-4 py-2">Created At</th>
+                    <th className="px-4 py-2">Actions</th> {/* Add Actions column */}
                 </tr>
-            ))
-            ) : (
-            <tr>
-                <td colSpan="7" className="text-center text-gray-500 py-4">
-                No records found.
-                </td>
-            </tr>
-            )}
-        </tbody>
-        </table>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
-    </main>
+            </thead>
+            <tbody>
+                {filteredRecords.length > 0 ? (
+                filteredRecords.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-700 text-gray-900">
+                    <td className="border border-gray-900 px-4 py-2">{record.id}</td>
+                    <td className="border border-gray-900 px-4 py-2">{record.first_name}</td>
+                    <td className="border border-gray-900 px-4 py-2">{record.last_name}</td>
+                    <td className="border border-gray-900 px-4 py-2">{record.email}</td>
+                    <td className="border border-gray-900 px-4 py-2">{record.is_active ? "Yes" : "No"}</td>
+                    <td className="border border-gray-900 px-4 py-2">{record.created_at}</td>
+                    <td className="border border-gray-900 px-4 py-2">
+                        {/* Suspend Account Button */}
+                        {record.is_active && (
+                        <button
+                            className="bg-red-500 text-white px-4 py-2 rounded"
+                            onClick={() => handleSuspend(record.id)}
+                        >
+                            Suspend Account
+                        </button>
+                        )}
+                    </td>
+                    </tr>
+                ))
+                ) : (
+                <tr>
+                    <td colSpan="7" className="text-center text-gray-500 py-4">
+                    No records found.
+                    </td>
+                </tr>
+                )}
+            </tbody>
+            </table>
+            {error && <p className="text-red-500 mt-4">{error}</p>}
+        </main>
 
-      {/* Footer Section */}
-    <footer className="bg-gray-800 text-white py-4">
-        <div className="container mx-auto px-4 text-center">
-        &copy; 2023 Access Records. All rights reserved.
+        {/* Footer Section */}
+        <footer className="bg-gray-800 text-white py-4">
+            <div className="container mx-auto px-4 text-center">
+            &copy; 2023 Access Records. All rights reserved.
+            </div>
+        </footer>
         </div>
-    </footer>
-    </div>
+    </RoleBasedRoute>
 );
 };
 
