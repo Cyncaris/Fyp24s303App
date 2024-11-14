@@ -79,10 +79,20 @@ const Dashboard = () => {
     } else {
       console.log('destinationRoute:', destinationRoute);
       setQrModalVisible(false);
-      if (destinationRoute === 'ManageAccount') {
-        router.push('/SysAdmin/ManageAccountDashboard');
-      } else if (destinationRoute === 'ManageRole') {
-        router.push('/SysAdmin/ManageRoleDashboard');
+      if (destinationRoute) {
+        console.log('Navigating to:', destinationRoute);
+        switch (destinationRoute) {
+          case 'ManageAccount':
+            router.push('/SysAdmin/ManageAccountDashboard');
+            break;
+          case 'ManageRole':
+            router.push('/SysAdmin/ManageRoleDashboard');
+            break;
+          default:
+            console.error('Unknown destination route:', destinationRoute);
+        }
+      } else {
+        console.error('No destination route specified');
       }
     }
   };
@@ -240,18 +250,18 @@ const Dashboard = () => {
             <h2 className="text-xl font-bold text-gray-800 mb-6">Manage Your Dashboard</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Manage Account Link */}
-              <Link
-                href="/SysAdmin/ManageAccountDashboard" // Path to the Manage Account page
+              <a
+                href="#"
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
-                onClick={(e) => handleLinkClick('ManageAccount', e)} // Handle the link click event
+                onClick={(e) => handleLinkClick('ManageAccount', e)}
               >
                 <span className="font-bold text-lg">Manage Account</span>
                 <i className="fas fa-user-cog text-2xl"></i>
-              </Link>
+              </a>
 
               {/* Manage Role Link */}
               <a
-                href="/SysAdmin/ManageRoleDashboard" // Placeholder link, replace with actual URL if available
+                href="#"
                 className="bg-blue-500 text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-blue-600 transition"
                 onClick={(e) => handleLinkClick('ManageRole', e)}
               >
