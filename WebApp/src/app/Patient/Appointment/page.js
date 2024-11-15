@@ -21,6 +21,8 @@ export default function Appointment() {
     const [doctor, setDoctor] = useState('');
     const [doctors, setDoctors] = useState([]);
     const [error, setError] = useState('');
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
     const router = useRouter();
 
     // Predefined appointment types
@@ -44,19 +46,19 @@ export default function Appointment() {
     const Logout = async () => {
         console.log('Logging out...');
         try {
-          // 1. Call backend to clear cookie
-          const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
-            withCredentials: true
-          });
-          if (!response.status === 200) {
-            throw new Error('Failed to log out');
-          }
-          else {
-            // 2. Redirect to login page
-            router.push('/');
-          }
+            // 1. Call backend to clear cookie
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+                withCredentials: true
+            });
+            if (!response.status === 200) {
+                throw new Error('Failed to log out');
+            }
+            else {
+                // 2. Redirect to login page
+                router.push('/');
+            }
         } catch (error) {
-          console.error('Error logging out:', error);
+            console.error('Error logging out:', error);
         }
     };
 
@@ -68,7 +70,7 @@ export default function Appointment() {
             setErrorMessage('No patient ID available. Please try again.');
             return;
         }
-        console.log(patientId,title,date,time,location);
+        console.log(patientId, title, date, time, location);
         setErrorMessage('');
         try {
             const { data, error } = await supabase
@@ -109,25 +111,25 @@ export default function Appointment() {
         try {
             setLoading(true);
             setError(null);
-            
+
             const { data, error } = await supabase
                 .from('useraccount')
                 .select('id, first_name, last_name')
                 .eq('role_id', '1');
-    
+
             if (error) {
                 console.error('Error fetching doctors:', error);
                 setError('Failed to fetch list of doctors');
                 setDoctors([]);
                 return;
             }
-    
+
             if (!data || data.length === 0) {
                 setError('No doctors found');
                 setDoctors([]);
                 return;
             }
-    
+
             setDoctors(data);
         } catch (err) {
             console.error('Unexpected error:', err);
@@ -151,50 +153,86 @@ export default function Appointment() {
             setAppointments(data);
         }
     };
+    const handleCancel = async (appointmentId) => {
+        try {
+            const { data, error } = await supabase
+                .from('appointments')
+                .delete()
+                .eq('id', appointmentId);
+
+            if (error) {
+                setErrorMessage('Failed to cancel appointment: ' + error.message);
+                return;
+            }
+
+            // Remove deleted appointment from the list
+            setAppointments((prev) =>
+                prev.filter((appointment) => appointment.id !== appointmentId)
+            );
+            setErrorMessage(''); // Clear any previous error message
+        } catch (error) {
+            setErrorMessage('Unexpected error: ' + error.message);
+        }
+    };
+
 
     useEffect(() => {
         const fetchUserProfile = async () => {
-          try {
-            // Use the NEXT_PUBLIC_BACKEND_URL instead of relative path
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
-              withCredentials: true
-            });
-            if (response.status == 401) {
-              router.push('/unauthorized');
-              return;
-            }
-    
-            if (!response.data.success) {
-              throw new Error('Verification failed');
-            }
-    
-            const userId = response.data.user.userId;
-            console.log('data',userId);
+            try {
+                // Use the NEXT_PUBLIC_BACKEND_URL instead of relative path
+                const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
+                    withCredentials: true
+                });
+                if (response.status == 401) {
+                    router.push('/unauthorized');
+                    return;
+                }
 
-            setPatientId(userId);
+                if (!response.data.success) {
+                    throw new Error('Verification failed');
+                }
 
-            fetchAppointments(userId);
-          } catch (error) {
-            if (error.response?.status === 401) {
-              // Clear auth state
-              setUser(null);
-              router.push('/unauthorized');
+                const userId = response.data.user.userId;
+                console.log('data', userId);
+
+                setPatientId(userId);
+
+                fetchAppointments(userId);
+            } catch (error) {
+                if (error.response?.status === 401) {
+                    // Clear auth state
+                    setUser(null);
+                    router.push('/unauthorized');
+                }
+
+                // Clear auth state
+                // setUser(null);
+                // document.cookie = 'authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                // router.push('/unauthorized');
+            } finally {
+                setLoading(false);
             }
-            
-            // Clear auth state
-            // setUser(null);
-            // document.cookie = 'authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            // router.push('/unauthorized');
-          } finally {
-            setLoading(false);
-          }
         };
-    
+
         fetchUserProfile();
         fetchListOfDoctors();
     }, [router]);
-    
-    if(loading) {
+    const openConfirmModal = (appointmentId) => {
+        setSelectedAppointmentId(appointmentId);
+        setShowConfirmModal(true);
+    };
+
+    const closeConfirmModal = () => {
+        setSelectedAppointmentId(null);
+        setShowConfirmModal(false);
+    };
+
+    const confirmCancel = async () => {
+        await handleCancel(selectedAppointmentId);
+        closeConfirmModal();
+    };
+
+    if (loading) {
         return <div>Loading...</div>;
     }
 
@@ -294,7 +332,7 @@ export default function Appointment() {
                                         ) : error ? (
                                             <div className="flex items-center justify-between p-2 border border-red-300 rounded-md bg-red-50">
                                                 <span className="text-red-500">{error}</span>
-                                                <button 
+                                                <button
                                                     onClick={fetchListOfDoctors}
                                                     className="text-sm text-blue-500 hover:text-blue-700"
                                                 >
@@ -352,7 +390,11 @@ export default function Appointment() {
                                 </thead>
                                 <tbody>
                                     {appointments.map((appointment) => (
-                                        <tr key={appointment.id}>
+                                        <tr
+                                            key={appointment.id}
+                                            className="hover:bg-gray-200 cursor-pointer"
+                                            onClick={() => openConfirmModal(appointment.id)}
+                                        >
                                             <td className="text-center">{appointment.title}</td>
                                             <td className="text-center">{appointment.date}</td>
                                             <td className="text-center">{appointment.time}</td>
@@ -364,6 +406,29 @@ export default function Appointment() {
                         </div>
                     </div>
                 </main>
+                {/* Confirmation Modal */}
+                {showConfirmModal && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+                        <div className="bg-white p-6 rounded-md shadow-lg max-w-md w-full">
+                            <h2 className="text-xl font-bold mb-4">Confirm Cancellation</h2>
+                            <p>Are you sure you want to cancel this appointment?</p>
+                            <div className="flex justify-end space-x-4 mt-4">
+                                <button
+                                    className="bg-red-500 text-white px-4 py-2 rounded-md"
+                                    onClick={confirmCancel}
+                                >
+                                    Yes, Cancel
+                                </button>
+                                <button
+                                    className="bg-gray-500 text-white px-4 py-2 rounded-md"
+                                    onClick={closeConfirmModal}
+                                >
+                                    No, Go Back
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer Section */}
                 <footer className="bg-gray-800 text-white py-4">
