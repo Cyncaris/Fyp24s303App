@@ -83,7 +83,7 @@
         switch (userRole) {
           case 1:
             console.log('Redirecting to Doctor dashboard...');
-            router.push('/Doctor/MainDashboard');
+            router.push('/Doctor/DoctorDashboard');
             break;
           case 2:
             console.log('Redirecting to Patient dashboard...');
