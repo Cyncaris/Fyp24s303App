@@ -240,7 +240,6 @@ const PatientDashboard = () => {
             <h2 className="text-xl font-bold text-gray-800 mb-6">Manage Your Dashboard</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <button
-                href="/Patient/PersonalRecord"
                 onClick={(e) => handleLinkClick('PersonalRecord', e)}
                 className="bg-black text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-gray-800 transition duration-300"
               >

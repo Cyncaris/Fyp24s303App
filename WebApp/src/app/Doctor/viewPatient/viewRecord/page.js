@@ -16,21 +16,21 @@ export default function ViewRecord() {
       const { data, error } = await supabase
         .from('patientrecord')
         .select(`
-          record_id,
-          patient_id,
-          diagnosis,
-          doctor_id,
-          visit_date,
-          treatment_plan,
-          prescription,
-          follow_up_date,
-          useraccount:patient_id ( first_name, last_name )
-        `);
+    record_id,
+    patient_id,
+    diagnosis,
+    doctor_id,
+    visit_date,
+    treatment_plan,
+    prescription,
+    follow_up_date,
+    useraccount:patient_id ( first_name, last_name ),
+    doctor:doctor_id ( first_name, last_name )
+  `);
 
       if (error) {
         console.error('Error fetching patients:', error);
       } else {
-        console.log(data); 
         const formattedPatients = data.map((patient) => ({
           id: patient.patient_id,
           name: `${patient.useraccount.first_name} ${patient.useraccount.last_name}`,
@@ -42,6 +42,8 @@ export default function ViewRecord() {
             treatmentPlan: patient.treatment_plan,
             prescription: patient.prescription,
             followUpDate: patient.follow_up_date,
+            patientName: `${patient.useraccount.first_name} ${patient.useraccount.last_name}`,
+            doctorName: `${patient.doctor.first_name} ${patient.doctor.last_name}`
           },
         }));
 
@@ -74,7 +76,7 @@ export default function ViewRecord() {
       prescription: patient.record.prescription,
       followUpDate: patient.record.followUpDate,
     });
-    setEditMode(false); 
+    setEditMode(false);
   };
 
   // Handle form input change
@@ -98,9 +100,9 @@ export default function ViewRecord() {
         treatment_plan: formData.treatmentPlan,
         prescription: formData.prescription,
         follow_up_date: formData.followUpDate,
-        last_update_at: new Date().toISOString(), 
+        last_update_at: new Date().toISOString(),
       })
-      .eq('patient_id', selectedPatient.id); 
+      .eq('patient_id', selectedPatient.id);
 
     if (error) {
       console.error('Error updating record:', error);
@@ -112,7 +114,7 @@ export default function ViewRecord() {
           ...formData,
         },
       });
-      setEditMode(false); 
+      setEditMode(false);
     }
   };
 
@@ -163,7 +165,7 @@ export default function ViewRecord() {
                     onClick={() => handlePatientClick(patient)}
                   >
                     <span className="text-black hover:underline">
-                      {patient.name} - {patient.id}
+                      {patient.name} - {patient.id.slice(0, 4)}
                     </span>
                   </li>
                 ))}
@@ -182,12 +184,12 @@ export default function ViewRecord() {
                 <p>{selectedPatient.record.recordId}</p>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Patient ID:</label>
-                <p>{selectedPatient.id}</p>
+                <label className="block text-gray-700 font-bold mb-2">Patient Name:</label>
+                <p>{selectedPatient.record.patientName}</p>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">Doctor ID:</label>
-                <p>{selectedPatient.record.doctorId}</p>
+                <label className="block text-gray-700 font-bold mb-2">Doctor Name:</label>
+                <p>{selectedPatient.record.doctorName}</p>
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 font-bold mb-2">Visit Date:</label>
@@ -209,7 +211,7 @@ export default function ViewRecord() {
                 <label className="block text-gray-700 font-bold mb-2">Follow-up Date:</label>
                 <p>{selectedPatient.record.followUpDate}</p>
               </div>
-              
+
               {/* Edit Record Button */}
               <button
                 className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full"
