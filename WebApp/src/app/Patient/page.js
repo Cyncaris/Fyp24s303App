@@ -53,10 +53,10 @@ const PatientDashboard = () => {
   };
 
   // Function to handle QR code authentication completion
-  const handleQrAuthenticated = async (data,route) => {
+  const handleQrAuthenticated = async (data, route) => {
     const currentRoute = route;
     try {
-    
+
       const tokeUpdate = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/update-token`, {
         userId: data.user_id,
       }, {
@@ -80,9 +80,9 @@ const PatientDashboard = () => {
       router.push('/Patient/PersonalRecord');
     }
   };
-  const setupPusherChannel = (channelData,route) => {
+  const setupPusherChannel = (channelData, route) => {
     // Clean up existing connection
-;
+    ;
     if (channelRef.current) {
       channelRef.current.unbind_all();
       channelRef.current.unsubscribe();
@@ -104,7 +104,7 @@ const PatientDashboard = () => {
       setError('Connection error. Please refresh.');
     });
     channel.bind('login-event', function (data) {
-      handleQrAuthenticated(data,route);
+      handleQrAuthenticated(data, route);
     });
     channelRef.current = channel;
   };
@@ -113,12 +113,10 @@ const PatientDashboard = () => {
   // Function to handle clicking the link
   const handleLinkClick = async (route, event) => {
     event.preventDefault();
-
-
     setLoading(true);
     const data = await getQRCode();
     if (data) {
-      setupPusherChannel(data,route);
+      setupPusherChannel(data, route);
     }
     setQrModalVisible(true);
     setLoading(false);
@@ -218,7 +216,7 @@ const PatientDashboard = () => {
                   </Link>
                 </li>
                 <li>
-                  <button 
+                  <button
                     onClick={handleLogout}
                     disabled={loading}
                     className="hover:underline disabled:opacity-50"
@@ -237,11 +235,11 @@ const PatientDashboard = () => {
               {error}
             </div>
           )}
-          
+
           <div className="bg-white shadow-md rounded-lg p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-6">Manage Your Dashboard</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <button  
+              <button
                 href="/Patient/PersonalRecord"
                 onClick={(e) => handleLinkClick('PersonalRecord', e)}
                 className="bg-black text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-gray-800 transition duration-300"

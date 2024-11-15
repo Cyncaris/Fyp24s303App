@@ -208,6 +208,9 @@ export default function Appointment() {
                         <nav>
                             <ul className="flex space-x-4">
                                 <li>
+                                    <a href="/Patient">Back</a>
+                                </li>
+                                <li>
                                     <a href="/Patient/" className="hover:underline">Home</a>
                                 </li>
                                 <li>

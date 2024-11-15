@@ -158,7 +158,7 @@ const PatientPersonalRecordDashboard = () => {
             <nav>
               <ul className="flex space-x-4">
                 <li>
-                  <Link href="/Patient/">Back</Link>
+                  <Link href="/Patient">Back</Link>
                 </li>
                 <li>
                   <Link href="/Patient/" className="hover:underline">Home</Link>

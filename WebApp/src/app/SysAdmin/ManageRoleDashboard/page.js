@@ -5,9 +5,7 @@ import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path to your 
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
 import { useRouter } from "next/navigation";
-
-
-
+import axios from "axios";
 
 const ManageRoleDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,19 +28,21 @@ const ManageRoleDashboard = () => {
   // Logout Function
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut(); // End the session
-      if (error) {
-        setError("Failed to log out: " + error.message);
-        return;
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
       }
-      clearCookies(); // Clear cookies after signing out
-      router.push("/"); // Redirect to the login page
-    } catch (err) {
-      setError("An unexpected error occurred during logout: " + err.message);
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
-
-
 
   // Role mapping function
   const mapRoleIdToRole = (role_id) => {

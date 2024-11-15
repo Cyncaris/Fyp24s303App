@@ -3,34 +3,28 @@ import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBase
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { supabase } from "@/app/lib/supabaseClient"; // Adjust the path based on your file structure
-
+import axios from "axios";
 
 const ManageAccountDashboard = () => {
   const router = useRouter();
   const [error, setError] = useState(""); // Add this at the top
-
+  
 
   const handleLogout = async () => {
     try {
-      // Sign out the user from Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        setError("Failed to log out: " + error.message);
-        return;
-      }
-  
-      // Clear all cookies
-      const cookies = document.cookie.split(";"); // Get all cookies
-      cookies.forEach((cookie) => {
-        const name = cookie.split("=")[0].trim();
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`; // Clear each cookie
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
       });
-  
-      // Redirect to the login page
-      router.push("/"); // Adjust the path if your login page is located elsewhere
-    } catch (err) {
-      setError("An unexpected error occurred during logout: " + err.message);
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
+      }
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
