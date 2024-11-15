@@ -213,7 +213,7 @@ const PatientDashboard = () => {
             <nav>
               <ul className="flex space-x-4">
                 <li>
-                  <Link href="/Patient/" className="hover:underline">
+                  <Link href="/Patient" className="hover:underline">
                     Home
                   </Link>
                 </li>
@@ -241,13 +241,14 @@ const PatientDashboard = () => {
           <div className="bg-white shadow-md rounded-lg p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-6">Manage Your Dashboard</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <a
+              <button  
+                href="/Patient/PersonalRecord"
                 onClick={(e) => handleLinkClick('PersonalRecord', e)}
                 className="bg-black text-white p-4 rounded-lg shadow-md flex items-center justify-between hover:bg-gray-800 transition duration-300"
               >
                 <span className="font-bold text-lg">View Personal Record</span>
                 <i className="fas fa-user text-2xl"></i>
-              </a>
+              </button>
 
               <Link
                 href="/Patient/Appointment"

@@ -164,7 +164,7 @@ const PatientPersonalRecordDashboard = () => {
                   <Link href="/Patient/" className="hover:underline">Home</Link>
                 </li>
                 <li>
-                  <Link onClick={Logout} className="hover:underline">Logout</Link>
+                  <button onClick={Logout} className="hover:underline">Logout</button>
                 </li>
               </ul>
             </nav>
