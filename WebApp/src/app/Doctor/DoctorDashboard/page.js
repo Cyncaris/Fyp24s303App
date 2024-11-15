@@ -204,16 +204,23 @@ export default function Home() {
 
   return (
     <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={false}>
-    <div className="bg-gray-100 min-h-screen flex flex-col">
+
+      <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
-      <header className="bg-white text-gray-800 py-4 shadow-lg">
+      <header className="bg-green-600 text-white py-4 shadow-lg">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Dashboard</h1>
+          {user && <h2 className="text-lg">Welcome, {user.username}</h2>}
           <nav>
             <ul className="flex space-x-4">
               {/* Navigation Links */}
               <li>
-                <Link href="/Doctor/DoctorDashboard" className="hover:underline text-blue-600">Home</Link>
+                <Link href="/Doctor/DoctorDashboard" className="hover:underline">Home</Link>
+              </li>
+              <li>
+                  <button onClick={handleLogout} className="hover:underline">
+                    Logout
+                  </button>
               </li>
             </ul>
           </nav>
@@ -222,16 +229,16 @@ export default function Home() {
 
       {/* Main Content Section */}
       <main className="flex-grow container mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">Welcome!!</h1>
         <div className="bg-white shadow-lg rounded-lg p-8 w-full mx-0">
           <h3 className="text-xl font-bold text-gray-800 mb-8">Manage Your Dashboard</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <button 
+            <a 
             onClick={(e) => handleLinkClick('ViewPatient', e)}
-            className="bg-blue-500 w-full items-center border px-3 py-4 rounded-lg text-lg font-semibold shadow hover:bg-blue-600 text-white transition-all duration-300">
+            className="bg-green-600 w-full items-center border px-3 py-4 rounded-lg text-lg font-semibold shadow hover:shadow-md text-white transition-all duration-300">
               View Patients
-            </button>
-            <Link href="/Doctor/viewAppointment" className="bg-blue-500 w-full items-center border px-3 py-4 rounded-lg text-lg font-semibold shadow hover:bg-blue-600 text-white transition-all duration-300">
+            </a>
+            <Link href="/Doctor/viewAppointment" 
+            className="bg-green-600 w-full items-center border px-3 py-4 rounded-lg text-lg font-semibold shadow hover:shadow-md text-white transition-all duration-300">
               View Appointments
             </Link>
           </div>
