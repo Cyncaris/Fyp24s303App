@@ -36,7 +36,7 @@ export default function QrScanner({ session }: { session: Session }) {
         const user_id = session.user?.id;
        
         try {
-            let resp = await fetch(`http://192.168.136.38:3000/api/login`, {
+            let resp = await fetch(`https://mobileappbackend-production-2851.up.railway.app/api/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,6 +61,7 @@ export default function QrScanner({ session }: { session: Session }) {
     };
 
     const handleLogout = async () => {
+        console.log('Logging out...');
         try {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
@@ -83,7 +84,6 @@ export default function QrScanner({ session }: { session: Session }) {
             {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
             <Pressable
                 style={styles.logoutButton}
-                disabled={!isPermissionGranted}
                 onPress={handleLogout}
             >
                 <Text style={styles.logoutButtonText}>Logout</Text>
