@@ -32,7 +32,7 @@ export default function Home() {
     <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={false}>
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
-      <header className="bg-white text-gray-800 py-4 shadow-lg">
+      <header className="bg-green-600 text-white py-4 shadow-lg">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <nav>
