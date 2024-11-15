@@ -1,10 +1,36 @@
+
 'use client';
 
 import Link from 'next/link';
+import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
 
 export default function ViewPatient() {
- 
+    // Function to clear all cookies
+    const clearCookies = () => {
+      const cookies = document.cookie.split(";"); // Get all cookies
+      cookies.forEach((cookie) => {
+        const name = cookie.split("=")[0].trim();
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`; // Overwrite with an expired date
+      });
+    };
+  
+    // Logout Function
+    const handleLogout = async () => {
+      try {
+        const { error } = await supabase.auth.signOut(); // End the session
+        if (error) {
+          setError("Failed to log out: " + error.message);
+          return;
+        }
+        clearCookies(); // Clear cookies after signing out
+        router.push("/"); // Redirect to the login page
+      } catch (err) {
+        setError("An unexpected error occurred during logout: " + err.message);
+      }
+    }; 
   return (
+    <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={false}>
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-green-600 text-white py-4 shadow-lg">
@@ -20,7 +46,9 @@ export default function ViewPatient() {
                 <Link href="/Doctor/DoctorDashboard" className="hover:underline">Home</Link>
               </li>
               <li>
-                <Link href="/" className="hover:underline">Logout</Link>
+                  <button onClick={handleLogout} className="hover:underline">
+                    Logout
+                  </button>
               </li>
             </ul>
           </nav>
@@ -49,5 +77,6 @@ export default function ViewPatient() {
         </div>
       </footer>
     </div>
+    </RoleBasedRoute>
   );
 }
