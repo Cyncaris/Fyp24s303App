@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../../lib/supabaseClient';
+import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
 
 export default function ViewRecord() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -120,6 +122,7 @@ export default function ViewRecord() {
 
 
   return (
+    <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={true}>
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-green-600 text-white py-4 shadow-lg">
@@ -304,5 +307,6 @@ export default function ViewRecord() {
         <p className="text-gray-600">© 2024 Your Hospital. All Rights Reserved.</p>
       </footer>
     </div>
+    </RoleBasedRoute>
   );
 }

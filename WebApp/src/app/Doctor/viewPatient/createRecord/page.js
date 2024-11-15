@@ -192,7 +192,7 @@ export default function CreateRecord() {
   );
 
   return (
-    <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={false}>
+    <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={true}>
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-green-600 text-white py-4 shadow-lg">
