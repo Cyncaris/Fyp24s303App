@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+// Add these imports at the top
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { supabase } from '../../../lib/supabaseClient'; 
+import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
 
 export default function CreateRecord() {
+  const router = useRouter(); // Add router initialization
   const [formData, setFormData] = useState({
+    patientId: '',
     visitDate: '',
     diagnosis: '',
     treatment: '',
@@ -13,6 +20,130 @@ export default function CreateRecord() {
     followUpDate: '',
   });
 
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [doctorId, setDoctorId] = useState('');
+
+  // Separate the fetch functions
+  const fetchUserProfile = async () => {
+    try {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
+        withCredentials: true
+      });
+
+      if (response.status === 401) {
+        router.push('/unauthorized');
+        return;
+      }
+
+      if (!response.data.success) {
+        throw new Error('Verification failed');
+      }
+
+      const userId = response.data.user.userId;
+      console.log("Doctor ID:", userId);
+      setDoctorId(userId);
+      return userId;
+    } catch (error) {
+      console.error('Profile fetch error:', error);
+      if (error.response?.status === 401) {
+        router.push('/unauthorized');
+      }
+      setError('Failed to load user profile');
+      return null;
+    }
+  };
+
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('useraccount')
+        .select('id, first_name, last_name')
+        .eq('role_id', 2);
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        setError('No patients found');
+        setPatients([]);
+      } else {
+        setPatients(data);
+      }
+    } catch (err) {
+      console.error('Error fetching patients:', err);
+      setError('Failed to fetch patients list');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use separate useEffects for clarity
+  useEffect(() => {
+    const initializePage = async () => {
+      const userId = await fetchUserProfile();
+      if (userId) {
+        await fetchPatients();
+      }
+    };
+
+    initializePage();
+  }, [router]); // Add router to dependencies
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.patientId) {
+      alert('Please select a patient');
+      return;
+    }
+
+    if (!doctorId) {
+      alert('Doctor ID not available. Please try again.');
+      return;
+    }
+
+    try {
+      console.log("Submitting record with doctor ID:", doctorId);
+      const { data, error } = await supabase
+        .from('patientrecord')
+        .insert([
+          {
+            patient_id: formData.patientId,
+            doctor_id: doctorId,
+            visit_date: formData.visitDate,
+            diagnosis: formData.diagnosis,
+            treatment_plan: formData.treatment,
+            prescription: formData.prescription,
+            follow_up_date: formData.followUpDate,
+          },
+        ])
+        .select(); // Add this to get the inserted record back
+
+      if (error) throw error;
+
+      console.log('Record created:', data);
+      alert('Record created successfully!');
+      setFormData({
+        patientId: '',
+        visitDate: '',
+        diagnosis: '',
+        treatment: '',
+        prescription: '',
+        followUpDate: '',
+      });
+    } catch (error) {
+      console.error('Error inserting record:', error);
+      alert('Error creating record: ' + error.message);
+    }
+  };
+
+  // Rest of your component remains the same...
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -20,39 +151,48 @@ export default function CreateRecord() {
       [name]: value,
     }));
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const { data, error } = await supabase
-      .from('patientrecord') 
-      .insert([
-        {
-          visit_date: formData.visitDate,
-          diagnosis: formData.diagnosis,
-          treatment_plan: formData.treatment,
-          prescription: formData.prescription,
-          follow_up_date: formData.followUpDate,
-        },
-      ]);
-
-    if (error) {
-      console.error('Error inserting record:', error);
-      alert('Error inserting record: ' + error.message); // Alert for better visibility
-    } else {
-      console.log('Record created successfully:', data); // Log the created record data
-      // Reset the form after successful submission
-      setFormData({
-        visitDate: '',
-        diagnosis: '',
-        treatment: '',
-        prescription: '',
-        followUpDate: '',
-      });
-    }
-  };
+   // Replace the patient input field with this dropdown
+   const PatientSelect = () => (
+    <div className="mb-4">
+      <label htmlFor="patientId" className="block text-gray-700 font-bold mb-2">
+        Patient
+      </label>
+      {loading ? (
+        <div className="animate-pulse flex items-center justify-center h-10 bg-gray-100 rounded-md">
+          <span className="text-gray-500">Loading patients...</span>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-between p-2 border border-red-300 rounded-md bg-red-50">
+          <span className="text-red-500">{error}</span>
+          <button 
+            onClick={fetchPatients}
+            className="text-sm text-blue-500 hover:text-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <select
+          id="patientId"
+          name="patientId"
+          value={formData.patientId}
+          onChange={handleChange}
+          className="w-full p-2 border border-gray-300 rounded-lg text-gray-700"
+          required
+        >
+          <option value="">Select a Patient</option>
+          {patients.map((patient) => (
+            <option key={patient.id} value={patient.id}>
+              {patient.first_name} {patient.last_name}
+            </option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
 
   return (
+    <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={false}>
     <div className="bg-gray-100 min-h-screen flex flex-col">
       {/* Header Section */}
       <header className="bg-green-600 text-white py-4 shadow-lg">
@@ -79,6 +219,7 @@ export default function CreateRecord() {
         <div className="bg-white shadow-md rounded-lg p-6 max-w-lg mx-auto">
           <h2 className="text-xl font-bold text-gray-800 mb-6">Patient Record</h2>
           <form onSubmit={handleSubmit}>
+            <PatientSelect />
             {/* Visit Date Input */}
             <div className="mb-4">
               <label htmlFor="visitDate" className="block text-gray-700 font-bold mb-2">Visit Date</label>
@@ -158,5 +299,6 @@ export default function CreateRecord() {
         </div>
       </footer>
     </div>
+    </RoleBasedRoute>
   );
 }

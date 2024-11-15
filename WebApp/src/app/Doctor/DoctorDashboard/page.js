@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBasedRoute component
-import { ROLES } from '@/app/utils/roles'; // Import ROLES object // Import RoleBasedRoute component
+import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
 
 export default function Home() {
   return (
