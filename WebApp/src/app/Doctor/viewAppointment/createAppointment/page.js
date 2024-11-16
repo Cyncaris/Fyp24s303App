@@ -149,6 +149,24 @@ export default function CreateAppointment() {
     }
   };
 
+  const Logout = async () => {
+    try {
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
+      }
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   useEffect(() => {
     const initializePage = async () => {
       await Promise.all([
@@ -175,7 +193,7 @@ export default function CreateAppointment() {
                 <Link href="/Doctor/DoctorDashboard" className="hover:underline">Home</Link>
               </li>
               <li>
-                <Link href="/" className="hover:underline">Logout</Link>
+                <button onClick={handleLogout} className="hover:underline">Logout</button>
               </li>
             </ul>
           </nav>

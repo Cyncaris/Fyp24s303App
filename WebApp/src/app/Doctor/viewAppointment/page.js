@@ -134,6 +134,24 @@ export default function ViewAppointment() {
     });
     setIsEditing(false);
   };
+  const Logout = async () => {
+    try {
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
+      }
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -202,7 +220,7 @@ export default function ViewAppointment() {
             <ul className="flex space-x-4">
               <li><Link href="/Doctor/DoctorDashboard" className="hover:underline">Back</Link></li>
               <li><Link href="/Doctor/DoctorDashboard" className="hover:underline">Home</Link></li>
-              <li><Link href="/" className="hover:underline">Logout</Link></li>
+              <li><button onClick={Logout} className="hover:underline">Logout</button></li>
             </ul>
           </nav>
         </div>

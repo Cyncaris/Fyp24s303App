@@ -41,7 +41,7 @@ export default function CreateRecord() {
         throw new Error('Verification failed');
       }
 
-      const userId = response.data.user.userId;
+      const userId = response.data.user.id;
 
       setDoctorId(userId);
       return userId;
@@ -92,9 +92,29 @@ export default function CreateRecord() {
       }
     };
 
+    console.log('doctorId:', doctorId); 
+
     initializePage();
   }, [router]); // Add router to dependencies
 
+  const Logout = async () => {
+    try {
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
+      }
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -108,6 +128,7 @@ export default function CreateRecord() {
       return;
     }
 
+    console.log("id for both" , formData.patientId, doctorId);
     try {
 
       const { data, error } = await supabase
@@ -206,7 +227,7 @@ export default function CreateRecord() {
                 <Link href="/Doctor/DoctorDashboard" className="hover:underline">Home</Link>
               </li>
               <li>
-                <Link href="/" className="hover:underline">Logout</Link>
+                <a onClick={Logout} className="hover:underline">Logout</a> 
               </li>
             </ul>
           </nav>

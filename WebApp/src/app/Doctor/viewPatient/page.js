@@ -5,6 +5,25 @@ import RoleBasedRoute from '@/app/components/RoleBasedRoute'; // Import RoleBase
 import { ROLES } from '@/app/utils/roles'; // Import ROLES object 
 
 export default function ViewPatient() {
+  
+  const Logout = async () => {
+    try {
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
+      }
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
  
   return (
     <RoleBasedRoute allowedRoles={[ROLES.DOCTOR]} requireRestricted={true}>
@@ -23,7 +42,7 @@ export default function ViewPatient() {
                 <Link href="/Doctor/DoctorDashboard" className="hover:underline">Home</Link>
               </li>
               <li>
-                <Link href="/" className="hover:underline">Logout</Link>
+                <a onClick={Logout} className="hover:underline">Logout</a> 
               </li>
             </ul>
           </nav>

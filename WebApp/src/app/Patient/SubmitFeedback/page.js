@@ -51,23 +51,19 @@ export default function SubmitFeedback() {
     };
     const handleLogout = async () => {
         try {
-            setLoading(true);
-            const response = await axios.post(
-                `${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`,
-                {},
-                { withCredentials: true }
-            );
-
-            if (response.status === 200) {
+            // 1. Call backend to clear cookie
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+                withCredentials: true
+            });
+            if (!response.status === 200) {
+                throw new Error('Failed to log out');
+            }
+            else {
+                // 2. Redirect to login page
                 router.push('/');
-            } else {
-                throw new Error('Logout failed');
             }
         } catch (error) {
-            console.error('Logout error:', error);
-            setError('Failed to logout. Please try again.');
-        } finally {
-            setLoading(false);
+            console.error('Error logging out:', error);
         }
     };
 
