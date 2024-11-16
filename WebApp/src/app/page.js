@@ -51,9 +51,6 @@
 
 
     const handleLogin = async (data) => {
-      console.log('Received login data:', data.token);
-      console.log('Received user data:', data.user_id);
-
 
       try {
         const tokenResponse = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gen-token`, {
@@ -66,18 +63,19 @@
           throw new Error('Failed to generate token');
         }
 
-        console.log('Token generated successfully');
-
+      } catch (tokenError) {
+        console.error('Token generation error:', tokenError);
+        setError('Failed to create session. Please try again.');
+      }
         // // Store user info if needed (avoid storing sensitive data)
         // localStorage.setItem('user_info', JSON.stringify({
         //   userId: data.user_id,
         //   role: user.data.data.role_id
         // }));
-
+      try {
         const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/verify-token`, {
           withCredentials: true
         });
-        console.log('User data:', response);
 
         const userRole = response.data.user.role;
         switch (userRole) {
@@ -98,11 +96,12 @@
             setError('Login failed: Invalid user role');
             return;
         }
-
-      } catch (tokenError) {
-        console.error('Token generation error:', tokenError);
-        setError('Failed to create session. Please try again.');
+      }catch (error) {
+        console.error('Token verification error:', error);
+        setError('Login failed: Invalid token');
       }
+
+     
 
     };
 
@@ -123,8 +122,6 @@
       // Subscribe to the channel
       const channel = pusherRef.current.subscribe(`private-${channelData}`);
 
-      console.log('Subscribing to channel:', `private-${channelData}`);
-
       channel.bind('pusher:subscription_succeeded', () => {
         console.log('Successfully subscribed to channel');
       });
@@ -135,7 +132,6 @@
       });
 
       channel.bind('login-event', function (data) {
-        console.log('Received login event:', data);
         handleLogin(data);
       });
 
