@@ -70,7 +70,7 @@ export default function Appointment() {
             setErrorMessage('No patient ID available. Please try again.');
             return;
         }
-        console.log(patientId, title, date, time, location);
+
         setErrorMessage('');
         try {
             const { data, error } = await supabase
@@ -193,7 +193,6 @@ export default function Appointment() {
                 }
 
                 const userId = response.data.user.userId;
-                console.log('data', userId);
 
                 setPatientId(userId);
 

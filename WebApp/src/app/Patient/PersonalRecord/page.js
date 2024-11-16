@@ -34,7 +34,7 @@ const PatientPersonalRecordDashboard = () => {
 
   // Fetch medical information from the database
   const fetchMedicalInfo = async () => {
-    console.log("Fetching medical info for patientId:", patientId);
+
     if (!patientId) {
         setError("No patient ID available");
         setLoading(false);
@@ -132,7 +132,7 @@ const PatientPersonalRecordDashboard = () => {
 
         const userId = response.data.user.userId;
         setPatientId(userId);
-        console.log("Patient ID:", userId);
+
       } catch (error) {
         console.error('Profile fetch error:', error);
         if (error.response?.status === 401) {

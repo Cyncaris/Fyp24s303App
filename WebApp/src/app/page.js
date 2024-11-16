@@ -108,7 +108,6 @@
     const setupPusherChannel = (channelData) => {
       // Clean up existing connection
 
-      console.log('Channel Data:', channelData);
       if (channelRef.current) {
         channelRef.current.unbind_all();
         channelRef.current.unsubscribe();

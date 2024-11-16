@@ -88,8 +88,6 @@ export default function SubmitFeedback() {
                 }
 
                 const userId = response.data.user.userId;
-                console.log('data', userId);
-
                 setPatientId(userId);
 
                 fetchAppointments(userId);

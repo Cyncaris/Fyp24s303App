@@ -77,10 +77,8 @@ const Dashboard = () => {
     if (response.status !== 200) {
       throw new Error('Failed to verify token');
     } else {
-      console.log('destinationRoute:', currentRoute);
       setQrModalVisible(false);
       if (currentRoute) {
-        console.log('Navigating to:', currentRoute);
         switch (currentRoute) {
           case 'ManageAccount':
             router.push('/SysAdmin/ManageAccountDashboard');

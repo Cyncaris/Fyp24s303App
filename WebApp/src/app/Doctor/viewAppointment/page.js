@@ -41,7 +41,7 @@ export default function ViewAppointment() {
       }
 
       const userId = response.data.user.userId;
-      console.log("Doctor ID:", userId);
+
       setDoctorId(userId);
       return userId;
     } catch (error) {

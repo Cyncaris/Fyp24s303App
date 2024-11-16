@@ -42,7 +42,7 @@ export default function CreateRecord() {
       }
 
       const userId = response.data.user.userId;
-      console.log("Doctor ID:", userId);
+
       setDoctorId(userId);
       return userId;
     } catch (error) {
@@ -109,7 +109,7 @@ export default function CreateRecord() {
     }
 
     try {
-      console.log("Submitting record with doctor ID:", doctorId);
+
       const { data, error } = await supabase
         .from('patientrecord')
         .insert([
@@ -127,7 +127,6 @@ export default function CreateRecord() {
 
       if (error) throw error;
 
-      console.log('Record created:', data);
       alert('Record created successfully!');
       setFormData({
         patientId: '',
