@@ -160,21 +160,21 @@ app.post('/api/update-token', async (req, res) => {
     try {
         // Verify with public key
         const decoded = jwt.verify(currentToken, publicKey, { algorithms: ['RS256'] });
-        
-        const newPayload = { 
-            ...decoded, 
-            restricted: true, 
+
+        const newPayload = {
+            ...decoded,
+            restricted: true,
             iat: Math.floor(Date.now() / 1000),
             nonce: require('crypto').randomBytes(32).toString('hex')
         };
         delete newPayload.exp;
 
         // Sign with private key
-        const newToken = jwt.sign(newPayload, privateKey, { 
+        const newToken = jwt.sign(newPayload, privateKey, {
             algorithm: 'RS256',
             expiresIn: '1h'
         });
-        
+
         res.cookie('authToken', newToken, getCookieOptions());
 
         return res.status(200).json({ success: true, message: 'Token updated successfully' });
@@ -229,8 +229,8 @@ function verifyToken(req, res, next) {
             req.user = payload;
             next();
         });
-        
-        
+
+
         // req.user = {
         //     userId: decoded.id,
         //     username: decoded.username,
@@ -260,9 +260,39 @@ app.get('/protected', verifyToken, (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-    res.clearCookie('authToken', getCookieOptions());
-    console.log('Logged out successfully');
-    res.json({ success: true, message: "Logged out successfully" });
+    try {
+        // Clear cookie with matching settings
+        res.clearCookie('authToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+            path: '/',
+            domain: process.env.COOKIE_DOMAIN || undefined,  // Must match the domain used to set the cookie
+            expires: new Date(0), // Forces immediate expiration
+            maxAge: 0 // Also force immediate expiration
+        });
+
+        // Clear any other related cookies if they exist
+        res.clearCookie('authToken', {
+            path: '/',
+            domain: undefined
+        });
+
+        // Clear cookie without any options as fallback
+        res.clearCookie('authToken');
+
+        console.log('Logged out successfully');
+        res.status(200).json({
+            success: true,
+            message: "Logged out successfully"
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error during logout"
+        });
+    }
 });
 
 const PORT = process.env.PORT || 3000;
