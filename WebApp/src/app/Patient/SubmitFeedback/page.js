@@ -134,53 +134,72 @@ export default function SubmitFeedback() {
                     </div>
                 </header>
                 <div className="flex items-center justify-center mt-5 mb-5">
-                    <div className="bg-white container px-4 border-solid border-2 rounded-sm">
-                        <h1 className='mt-5 mb-2 text-2xl text-center font-bold'>Share your Feedback!</h1>
-                        <form onSubmit={handleSubmit}>
-                            <div>
-                                <label className="" htmlFor="issueFaced">Issues Faced</label>
-                                <input
-                                    className="bg-gray-100 h-12 w-full border border-gray-300 p-2 rounded-md text-base mb-2"
-                                    type="text"
-                                    id="issueFaced"
-                                    value={issueFaced}
-                                    onChange={(e) => setIssueFaced(e.target.value)}
-                                    required
-                                />
+                    <div className="bg-gray-100 min-h-screen flex flex-col">
+                        {/* Header Section */}
+                        <header className="bg-black text-white py-4 shadow-lg">
+                            <div className="container mx-auto px-4 flex justify-between items-center">
+                                <h1 className="text-2xl font-bold">Feedback</h1>
+                                <nav>
+                                    <ul className="flex space-x-4">
+                                        <li>
+                                            <a href="/Patient">Back</a>
+                                        </li>
+                                        <li>
+                                            <a href="/Patient" className="hover:underline">Home</a>
+                                        </li>
+                                        <li>
+                                            <a onClick={handleLogout} className="hover:underline cursor-pointer">Logout</a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
-                            <div>
-                                <label className="" htmlFor="suggestion">Suggestion</label>
-                                <textarea
-                                    className="bg-gray-100 h-40 w-full border border-gray-300 p-2 rounded-md text-base"
-                                    rows="5"
-                                    id="suggestion"
-                                    value={suggestion}
-                                    onChange={(e) => setSuggestion(e.target.value)}
-                                    required
-                                />
+                        </header>
+                        <div className="flex items-center justify-center flex-grow">
+                            <div className="bg-white max-w-lg w-full px-6 py-6 border-solid border-2 rounded-md shadow-md">
+                                <h1 className="mt-2 mb-4 text-2xl text-center font-bold">Share your Feedback!</h1>
+                                <form onSubmit={handleSubmit}>
+                                    <div className="mb-4">
+                                        <label htmlFor="issueFaced" className="block mb-1 text-sm font-medium">Issues Faced</label>
+                                        <input
+                                            className="bg-gray-100 h-12 w-full border border-gray-300 p-2 rounded-md text-base"
+                                            type="text"
+                                            id="issueFaced"
+                                            value={issueFaced}
+                                            onChange={(e) => setIssueFaced(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <label htmlFor="suggestion" className="block mb-1 text-sm font-medium">Suggestion</label>
+                                        <textarea
+                                            className="bg-gray-100 w-full border border-gray-300 p-2 rounded-md text-base"
+                                            rows="5"
+                                            id="suggestion"
+                                            value={suggestion}
+                                            onChange={(e) => setSuggestion(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <button
+                                        className="bg-black text-white w-full py-2 rounded-md shadow-md hover:bg-blue-600 transition"
+                                        type="submit"
+                                        disabled={loading}
+                                    >
+                                        {loading ? 'Submitting...' : 'Submit'}
+                                    </button>
+                                </form>
+                                {errorMessage && <p className="text-red-500 text-center mt-4">{errorMessage}</p>}
+                                {successMessage && <p className="text-green-500 text-center mt-4">{successMessage}</p>}
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-5">
-                                <button
-                                    className="bg-black text-white p-4 rounded-lg shadow-md items-center justify-between hover:bg-blue-600 transition"
-                                    type="submit"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Submitting...' : 'Submit'}
-                                </button>
+                        </div>
+                    
+                        {/* Footer Section */}
+                        <footer className="bg-gray-800 text-white py-4 mt-auto">
+                            <div className="container mx-auto px-4 text-center">
+                                &copy; 2023 Hospital App. All rights reserved.
                             </div>
-                        </form>
-                        {errorMessage && <p className="text-red-500 text-center mt-2">{errorMessage}</p>}
-                        {successMessage && <p className="text-green-500 text-center mt-2">{successMessage}</p>}
+                        </footer>
                     </div>
-                </div>
-
-                {/* Footer Section */}
-                <footer className="bg-gray-800 text-white py-4">
-                    <div className="container mx-auto px-4 text-center">
-                        &copy; 2023 Hospital App. All rights reserved.
-                    </div>
-                </footer>
-            </div>
         </RoleBasedRoute>
     );
 };
