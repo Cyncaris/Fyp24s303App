@@ -12,7 +12,7 @@ const ViewAccount = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [editableUser, setEditableUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [users, setUsers] = useState([]); 
+  const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const router = useRouter();
@@ -29,15 +29,19 @@ const ViewAccount = () => {
   // Logout Function
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut(); // End the session
-      if (error) {
-        setError("Failed to log out: " + error.message);
-        return;
+      // 1. Call backend to clear cookie
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`, {}, {
+        withCredentials: true
+      });
+      if (!response.status === 200) {
+        throw new Error('Failed to log out');
       }
-      clearCookies(); // Clear cookies after signing out
-      router.push("/"); // Redirect to the login page
-    } catch (err) {
-      setError("An unexpected error occurred during logout: " + err.message);
+      else {
+        // 2. Redirect to login page
+        router.push('/');
+      }
+    } catch (error) {
+      console.error('Error logging out:', error);
     }
   };
 
@@ -111,7 +115,7 @@ const ViewAccount = () => {
       }
 
       // Update the users state to reflect changes immediately
-      const updatedUsers = users.map(user => 
+      const updatedUsers = users.map(user =>
         user.id === editableUser.id ? { ...user, ...editableUser } : user
       );
       setUsers(updatedUsers);
@@ -133,7 +137,7 @@ const ViewAccount = () => {
             <nav>
               <ul className="flex space-x-4">
                 <li>
-                    <a href="/SysAdmin/ManageAccountDashboard">Back</a>
+                  <a href="/SysAdmin/ManageAccountDashboard">Back</a>
                 </li>
                 <li>
                   <Link href="/SysAdmin/MainDashboard" className="hover:underline">Home</Link>
@@ -197,7 +201,7 @@ const ViewAccount = () => {
             {selectedUser && (
               <div id="account-details">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Account Details</h3>
-                
+
                 {/* Editable Fields */}
                 <div className="mb-4">
                   <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email</label>
