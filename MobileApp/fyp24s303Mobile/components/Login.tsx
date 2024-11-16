@@ -1,6 +1,5 @@
-// Auth.tsx
 import React, { useState, useEffect } from 'react';
-import { Alert, StyleSheet, View, AppState } from 'react-native';
+import { Alert, StyleSheet, View, AppState, Image } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { supabase } from '../lib/supabase';
 import { Button, Input } from '@rneui/themed';
@@ -62,7 +61,7 @@ export default function Auth() {
         });
 
         if (error) {
-            Alert.alert(error.message);
+            Alert.alert("Incorrect Credentials!");
             setLoading(false);
             return;
         }
@@ -109,9 +108,13 @@ export default function Auth() {
         }
     }
 
-    // Rest of your component remains the same...
     return (
         <View style={styles.container}>
+            <Image
+                source={require('../assets/images/logofyp.png')}
+                style={styles.logo}
+                resizeMode="contain"
+            />
             <View style={styles.inputContainer}>
                 <Input
                     label="Email"
@@ -133,13 +136,6 @@ export default function Auth() {
                     autoCapitalize="none"
                 />
             </View>
-            <View style={styles.rememberMeContainer}>
-                <Button 
-                    title="Remember me" 
-                    type="clear" 
-                    titleStyle={styles.rememberMeText} 
-                />
-            </View>
             <View style={styles.buttonContainer}>
                 <Button
                     title="Login"
@@ -153,7 +149,6 @@ export default function Auth() {
     );
 }
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -162,30 +157,27 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#ffffff',
     },
+    logo: {
+        width: 200,
+        height: 100,
+        marginBottom: 20,
+    },
     inputContainer: {
         width: '100%',
         marginVertical: 10,
-    },
-    rememberMeContainer: {
-        alignItems: 'flex-start',
-        width: '100%',
-        paddingVertical: 10,
-    },
-    rememberMeText: {
-        color: '#333',
-        fontSize: 16,
     },
     buttonContainer: {
         width: '100%',
         marginTop: 20,
     },
     loginButton: {
-        backgroundColor: '#000000',
+        backgroundColor: '#1A76D2', // Vibrant blue color
         borderRadius: 8,
         height: 50,
     },
     loginButtonText: {
         fontSize: 18,
         fontWeight: 'bold',
+        color: '#ffffff', // Keep the text white for contrast
     },
 });
